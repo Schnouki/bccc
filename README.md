@@ -50,11 +50,68 @@ After doing all of this, you can install bccc from its Git repository:
 
     git clone git://github.com/Schnouki/bccc.git
     cd bccc
-    python3 setup.py install
+    python3 setup.py build
 
-If you want to hack on bccc, you should install it using this command instead:
+For a global installation:
 
-    python3 setup.py develop
+    sudo python3 setup.py install
+
+To install bccc in your `$HOME` (with the `bccc` binary in `$HOME/.local/bin`):
+
+    python3 setup.py install --user
+
+If you want to hack on bccc, you should install it with `develop`. It will be
+installed globally, but will still use the files in your Git checkout, making it
+easier to test your changes:
+
+    sudo python3 setup.py develop
+
+Once installed, you should be able to run bccc by just typing `bccc` in a
+terminal emulator. If it complain about a missing configuration file,
+congratulations, your installation probably works `:)`
+
+
+### Uninstall
+
+If you don't like bccc, you can uninstall it with pip3:
+
+    pip3 uninstall bccc
+
+There may be some leftover files after that if you did a `--user` or `develop`
+install: `$HOME/.local/bin/bccc` and `/usr/bin/bccc`. You will have to remove
+them by hand.
+
+At the moment `easy_install` does not seem to be capable of uninstalling
+modules. So if `pip3` is not available on your platform (and can't be installed
+with `easy_install3 pip`), you will have to uninstall bccc by hand. On my
+computer I can do it with these commands (as root):
+
+    rm /usr/lib/python3.2/site-packages/bccc*
+    rm /usr/bin/bccc
+    nano /usr/lib/python3.2/site-packages/easy-install.pth
+    # remove bccc lines in easy-install.pth
+
+You will probably have to adapt them on your system, for example by using
+`/usr/local` instead of `/usr`.
+
+
+### Troubleshooting
+
+When using `easy_install3` or some old versions of setuptools or distribute,
+`bccc` won't run but will fail with the following message:
+
+    Traceback (most recent call last):
+      File "/usr/local/bin/bccc", line 7, in <module>
+        execfile(__file__)
+    NameError: name 'execfile' is not defined
+
+This is due to these versions of setuptools/distribute not being correctly
+updated for Python 3, where the `execfile` function is no longer available.
+
+To fix it, edit your `/usr/local/bin/bccc` file and replace the
+`execfile(__file)` line with the following one:
+
+    exec(compile(open(__file__).read(), __file__, 'exec'))
 
 
 Configuration
@@ -102,7 +159,7 @@ Basic usage
   can start replying to the focused post/reply by pressing `r`. After you have
   typed your message, press `Alt+Enter` to send it or `Escape` to cancel.
 - In the main panel, you can press `=` to force reloading the channel. This is
-  mostly useful when debugging, not for general usage :)
+  mostly useful when debugging, not for general usage `:)`
 - In the main panel, you can update the active channel title, status message and
   description by typing `t`, `s` or `d`.
 - If the focused post/reply contain URLs, you can open them in your browser by

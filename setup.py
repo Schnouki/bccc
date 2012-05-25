@@ -11,7 +11,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 version = "0.0.1"
 
@@ -20,12 +20,12 @@ setup(name="bccc",
       description="buddycloud console client",
       author="Thomas Jost",
       author_email="schnouki@schnouki.net",
-      license="",
+      license="Apache License, version 2.0",
       url="https://github.com/Schnouki/bccc",
 
-      packages=["bccc"],
+      packages=find_packages(),
       scripts=["bin/bccc"],
-      include_package_data = True,
+      include_package_data=True,
 
       setup_requires=["distribute"],
       install_requires=[
