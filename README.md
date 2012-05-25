@@ -32,11 +32,13 @@ bccc uses the following libraries:
 
 You can install them using [pip3](http://www.pip-installer.org/) (`python-pip`
 package in Arch Linux) or `easy_install3` (`python3-setuptools` package in
-Debian):
+Debian/Ubuntu):
 
     pip3 install urwid sleekxmpp python-dateutil dnspython3
     # or
     easy_install3 urwid sleekxmpp python-dateutil dnspython3
+
+(If you're using Debian/Ubuntu, you will need to install `python3-dev` first.)
 
 If you use [Arch Linux](http://archlinux.org/), you're awesome! And if you have
 installed [yaourt](https://aur.archlinux.org/packages.php?ID=5863) (or any other
