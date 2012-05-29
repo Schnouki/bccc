@@ -16,9 +16,9 @@ There's even a [screencast on YouTube](http://youtu.be/vi1nyCPDGTk).
 Installation
 ------------
 
-bccc is written in [Python 3](http://python.org/download/releases/), and has
-only been tested with Python 3.2. It probably won't work with previous versions
-of Python 3, and it definitely won't work with Python 2.
+bccc is written in [Python 3](http://python.org/download/releases/), and is
+known to work with Python 3.1 and 3.2. It probably won't work with previous
+versions of Python 3, and it definitely won't work with Python 2.
 
 bccc uses the following libraries:
 

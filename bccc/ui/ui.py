@@ -33,7 +33,7 @@ class UI:
 
         # {{{ Palette
         palette = []
-        for key, val in conf["ui"].items():
+        for key, val in conf.items("ui"):
             attr = [a.strip() for a in val.split(";")]
             # Make sure there are enough entries
             if len(attr) in (1, 4):
@@ -141,7 +141,7 @@ class UI:
     def open_urls(self, *urls):
         def _open_urls():
             for url in urls:
-                subprocess.call([self.conf["url"]["opener"], url])
+                subprocess.call([self.conf.get("url", "opener"), url])
         thr = threading.Thread(target=_open_urls)
         thr.daemon = True
         thr.start()

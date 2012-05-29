@@ -36,12 +36,12 @@ if len(conf.read([config_file])) == 0:
     sys.exit(1)
 
 # Configure logging
-if "log" in conf and "filename" in conf["log"] and len(conf["log"]["filename"]) > 0:
+if conf.has_option("log", "filename") and len(conf.get("log", "filename")) > 0:
     LOG_LEVELS = {"debug": logging.DEBUG, "info": logging.INFO, "warning": logging.WARNING,
                   "error": logging.ERROR, "critical": logging.CRITICAL}
 
-    log_filename = os.path.expanduser(conf["log"]["filename"])
-    log_level = conf["log"]["level"]
+    log_filename = os.path.expanduser(conf.get("log", "filename"))
+    log_level = conf.get("log", "level")
     if log_level not in LOG_LEVELS.keys():
         print("Invalid log level '{}'. Possible values: {}.".format(log_level, ", ".join(LOG_LEVELS.keys())), file=sys.stderr)
         sys.exit(1)
@@ -52,11 +52,11 @@ if "log" in conf and "filename" in conf["log"] and len(conf["log"]["filename"]) 
                         filemode="w")
 
 # Get credentials
-if "jid" not in conf["buddycloud"] or "password" not in conf["buddycloud"]:
+if not conf.has_option("buddycloud", "jid") or not conf.has_option("buddycloud", "password"):
     print("JID and/or password is missing in configuration file", file=sys.stderr)
     sys.exit(1)
 
-client = bccc.client.Client(conf["buddycloud"]["jid"], conf["buddycloud"]["password"])
+client = bccc.client.Client(conf.get("buddycloud", "jid"), conf.get("buddycloud", "password"))
 if not client.connect():
     print("Unable to connect", file=sys.stderr)
     sys.exit(1)
