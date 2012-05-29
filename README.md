@@ -34,11 +34,18 @@ You can install them using [pip3](http://www.pip-installer.org/) (`python-pip`
 package in Arch Linux) or `easy_install3` (`python3-setuptools` package in
 Debian/Ubuntu):
 
-    pip3 install urwid sleekxmpp python-dateutil dnspython3
+    # Global installation (in /usr or /usr/local):
+    sudo pip3 install urwid sleekxmpp python-dateutil dnspython3
     # or
-    easy_install3 urwid sleekxmpp python-dateutil dnspython3
+    sudo easy_install3 urwid sleekxmpp python-dateutil dnspython3
 
-(If you're using Debian/Ubuntu, you will need to install `python3-dev` first.)
+    # User installation (in $HOME):
+    pip3 install --user urwid sleekxmpp python-dateutil dnspython3
+    # or
+    sudo easy_install3 --user urwid sleekxmpp python-dateutil dnspython3
+
+(If you're using Debian/Ubuntu, you will need to install `python3-dev` and `gcc`
+first.)
 
 If you use [Arch Linux](http://archlinux.org/), you're awesome! And if you have
 installed [yaourt](https://aur.archlinux.org/packages.php?ID=5863) (or any other
@@ -52,23 +59,26 @@ After doing all of this, you can install bccc from its Git repository:
     cd bccc
     python3 setup.py build
 
-For a global installation:
-
+    # Global installation (in /usr or /usr/local):
     sudo python3 setup.py install
-
-To install bccc in your `$HOME` (with the `bccc` binary in `$HOME/.local/bin`):
-
+    # User installation (in $HOME):
     python3 setup.py install --user
 
 If you want to hack on bccc, you should install it with `develop`. It will be
 installed globally, but will still use the files in your Git checkout, making it
 easier to test your changes:
 
+    # Global "develop" installation (in /usr or /usr/local):
     sudo python3 setup.py develop
+    # User "develop" installation (in $HOME):
+    python3 setup.py develop --user
 
-Once installed, you should be able to run bccc by just typing `bccc` in a
-terminal emulator. If it complain about a missing configuration file,
-congratulations, your installation probably works `:)`
+If you installed bccc with `--user`, you must add `$HOME/.local/bin` to your
+`$PATH`.
+
+You should now be able to run bccc by just typing `bccc` in a terminal emulator.
+If it complain about a missing configuration file, congratulations, your
+installation probably works `:)`
 
 
 ### Uninstall
