@@ -12,13 +12,18 @@
 # specific language governing permissions and limitations under the License.
 
 import bisect
+import logging
 import weakref
 
 import dateutil.parser
 
+logger = logging.getLogger('bccc.client.atom')
+logger.addHandler(logging.NullHandler())
+
 ATOM_NS     = "http://www.w3.org/2005/Atom"
 ATOM_THR_NS = "http://purl.org/syndication/thread/1.0"
 AS_NS       = "http://activitystrea.ms/spec/1.0/"
+
 
 # {{{ Exceptions
 class AtomError(Exception):
@@ -38,6 +43,10 @@ class Atom:
     @property
     def author(self):
         a = self.get_child("author")
+        if a is None:
+            # Something is terribly wrong.
+            logger.warning("Atom without author")
+            return "[unknown author]"
         name = a.find("{{{}}}name".format(ATOM_NS))
         if name is not None:
             return name.text
@@ -45,15 +54,22 @@ class Atom:
             # This should NOT happen >:-(
             url = a.find("{{{}}}url".format(ATOM_NS))
             if url is not None:
+                logger.warning("Atom without author name")
                 return url.text
             else:
+                logger.warning("Atom without author name & URL")
                 # Really ??!?
                 return "[unknown author]"
 
     @property
     def content(self):
+        cnt = self.get_child("content")
+        if cnt is None:
+            logger.warning("Atom without content")
+            return ""
         text = self.get_child("content").text
         if text is None:
+            logger.warning("Atom without content text")
             text = ""
         return text.strip()
 
