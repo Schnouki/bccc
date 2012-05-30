@@ -14,8 +14,11 @@
 # specific language governing permissions and limitations under the License.
 
 import configparser
+import getpass
 import logging
 import os, os.path
+from pkg_resources import Requirement, resource_filename
+import shutil
 import sys
 import threading
 
@@ -24,15 +27,39 @@ import bccc.client, bccc.ui
 config_dir = os.getenv("XDG_CONFIG_HOME", "~/.config")
 config_dir = os.path.expanduser(os.path.join(config_dir, "bccc"))
 config_file = os.path.join(config_dir, "bccc.conf")
+sample_config_file = resource_filename(Requirement.parse("bccc"), "bccc.conf.sample")
 
+# Create a default config file if none exists
+if not os.path.isfile(config_file):
+    print("It seems you don't have a configuration file yet. Let's create one.")
+    print("You will be asked for a few simple questions.")
+
+    # Create config dir and read sample config
+    if not os.path.isdir(config_dir):
+        os.makedirs(config_dir, mode=0o0700)
+    with open(sample_config_file) as f:
+        conf = f.read()
+
+    # Ask personal questions
+    jid = input("buddycloud login (JID): ")
+    password = getpass.getpass("password: ")
+
+    # Write config file. Using replace() is a little bit ugly, but if we used
+    # ConfigParser.set() and ConfigParser.write() we would lose comments from
+    # the sample config file.
+    conf = conf.replace("test@example.com", jid, 1).replace("super_secret_passw0rd", password, 1)
+    with open(config_file, "w") as f:
+        os.chmod(config_file, 0o0600)
+        f.write(conf)
+
+    print("Your configuration file has been written to {}".format(config_file))
+    input("Press enter to log in.")
+
+# Read config file (now there should be one)
 conf = configparser.ConfigParser()
 if len(conf.read([config_file])) == 0:
     print("Could not read configuration file in {}".format(config_file), file=sys.stderr)
-
-    from pkg_resources import Requirement, resource_filename
-    sample_config_file = resource_filename(Requirement.parse("bccc"),"bccc.conf.sample")
     print("A sample configuration file is available in {}.".format(sample_config_file), file=sys.stderr)
-
     sys.exit(1)
 
 # Configure logging
