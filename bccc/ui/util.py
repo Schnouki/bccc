@@ -11,9 +11,13 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+import logging
 import re
 
 import urwid
+
+logger = logging.getLogger('bccc.ui.util')
+logger.addHandler(logging.NullHandler())
 
 # {{{ Timezone
 # From http://docs.python.org/py3k/library/datetime.html#tzinfo-objects
@@ -48,12 +52,18 @@ class LocalTimezone(datetime.tzinfo):
         tt = (dt.year, dt.month, dt.day,
               dt.hour, dt.minute, dt.second,
               dt.weekday(), 0, 0)
-        stamp = time.mktime(tt)
+        # FIXME: workaround for #9. There will still be an OverflowError for
+        # year > 2038 on i686 :/
+        stamp = 0
+        try:
+            stamp = time.mktime(tt)
+        except OverflowError:
+            logger.debug("OverflowError in LocalTimezone._isdst(), tt=" + str(tt))
         tt = time.localtime(stamp)
         return tt.tm_isdst > 0
 
 LocalTZ = LocalTimezone()
-OldestDate = datetime.datetime(1900, 1, 1, tzinfo=LocalTZ)
+OldestDate = datetime.datetime.fromtimestamp(0, tz=LocalTZ)
 # }}}
 # {{{ Boxed edit widget
 class BoxedEdit(urwid.AttrMap):
