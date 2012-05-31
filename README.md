@@ -127,11 +127,15 @@ To fix it, edit your `/usr/local/bin/bccc` file and replace the
 Configuration
 -------------
 
-Before being able to use bccc, you will need to write a configuration file. A
-good sample is available in the Git repository, in `bccc/bccc.conf.sample`. You
-should copy it to `~/.config/bccc/bccc.conf`, make sure it is only readable by
-you (`chmod 600 ~/.config/bccc/bccc.conf`), and edit it to adjust your login and
-password.
+Before being able to use bccc, you will need to write a configuration file. The
+easiest way to do so is actually to run bccc: if no configuration file is found,
+it will ask for your credentials and create a configuration file using the
+default one.
+
+If you want to write the configuration file by hand, a good sample is available
+in the Git repository, in `bccc/bccc.conf.sample`. You should copy it to
+`~/.config/bccc/bccc.conf`, make sure it is only readable by you (`chmod 600
+~/.config/bccc/bccc.conf`), and edit it to adjust your login and password.
 
 This configuration file also contains the full palette used to render the UI.
 The values in the sample file work well for a dark terminal (see screenshot),
