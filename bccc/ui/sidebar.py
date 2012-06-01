@@ -11,12 +11,15 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-import urwid
+import datetime
 
-from .util import OldestDate
+import dateutil.tz
+import urwid
 
 # {{{ Channel box
 class ChannelBox(urwid.widget.BoxWidget):
+    _oldest_date = datetime.datetime.fromtimestamp(0, tz=dateutil.tz.tzlocal())
+
     def __init__(self, ui, channel):
         self.ui = ui
         self.channel = channel
@@ -63,14 +66,14 @@ class ChannelBox(urwid.widget.BoxWidget):
         channel.pubsub_get_config()
 
         # Get most recent post/comment so we can sort by date
-        self.most_recent_activity = OldestDate
+        self.most_recent_activity = self._oldest_date
         channel.pubsub_get_posts(max=1)
 
     # {{{ PubSub Callbacks
     def pubsub_posts_callback(self, atoms):
         # Find most recent atom
         recent_changed = False
-        first_post_ever = (self.most_recent_activity == OldestDate)
+        first_post_ever = (self.most_recent_activity == self._oldest_date)
         for atom in atoms:
             atom_pub = atom.published
             if atom_pub > self.most_recent_activity:

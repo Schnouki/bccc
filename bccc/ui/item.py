@@ -13,9 +13,10 @@
 
 import bisect
 
+import dateutil.tz
 import urwid
 
-from .util import BoxedEdit, LocalTZ
+from .util import BoxedEdit
 
 # {{{ Basic item widget
 class ItemWidget(urwid.FlowWidget):
@@ -83,7 +84,7 @@ class PostWidget(ItemWidget):
         self.item = post
 
         author = post.author
-        date = post.published.astimezone(LocalTZ).strftime("%x - %X")
+        date = post.published.astimezone(dateutil.tz.tzlocal()).strftime("%x - %X")
         text = post.content
         ItemWidget.__init__(self, post.id, author, date, text, padding)
 

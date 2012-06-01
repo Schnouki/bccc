@@ -11,60 +11,10 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-import logging
 import re
 
 import urwid
 
-logger = logging.getLogger('bccc.ui.util')
-logger.addHandler(logging.NullHandler())
-
-# {{{ Timezone
-# From http://docs.python.org/py3k/library/datetime.html#tzinfo-objects
-import datetime
-import time
-
-STDOFFSET = datetime.timedelta(seconds = -time.timezone)
-if time.daylight:
-    DSTOFFSET = datetime.timedelta(seconds = -time.altzone)
-else:
-    DSTOFFSET = STDOFFSET
-
-DSTDIFF = DSTOFFSET - STDOFFSET
-
-class LocalTimezone(datetime.tzinfo):
-    def utcoffset(self, dt):
-        if self._isdst(dt):
-            return DSTOFFSET
-        else:
-            return STDOFFSET
-
-    def dst(self, dt):
-        if self._isdst(dt):
-            return DSTDIFF
-        else:
-            return datetime.timedelta(0)
-
-    def tzname(self, dt):
-        return time.tzname[self._isdst(dt)]
-
-    def _isdst(self, dt):
-        tt = (dt.year, dt.month, dt.day,
-              dt.hour, dt.minute, dt.second,
-              dt.weekday(), 0, 0)
-        # FIXME: workaround for #9. There will still be an OverflowError for
-        # year > 2038 on i686 :/
-        stamp = 0
-        try:
-            stamp = time.mktime(tt)
-        except OverflowError:
-            logger.debug("OverflowError in LocalTimezone._isdst(), tt=" + str(tt))
-        tt = time.localtime(stamp)
-        return tt.tm_isdst > 0
-
-LocalTZ = LocalTimezone()
-OldestDate = datetime.datetime.fromtimestamp(0, tz=LocalTZ)
-# }}}
 # {{{ Boxed edit widget
 class BoxedEdit(urwid.AttrMap):
     attr_edit = ("boxed edit text", "focused boxed edit text")
