@@ -25,9 +25,6 @@ setup(name="bccc",
 
       packages=find_packages(),
       scripts=["bin/bccc"],
-      package_data={
-          "bccc": ["bccc.conf.sample"]
-      },
       include_package_data=True,
 
       setup_requires=["distribute"],

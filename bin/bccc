@@ -17,7 +17,7 @@ import configparser
 import getpass
 import logging
 import os, os.path
-from pkg_resources import Requirement, resource_filename
+from pkg_resources import resource_filename
 import shutil
 import sys
 import threading
@@ -27,7 +27,7 @@ import bccc.client, bccc.ui
 config_dir = os.getenv("XDG_CONFIG_HOME", "~/.config")
 config_dir = os.path.expanduser(os.path.join(config_dir, "bccc"))
 config_file = os.path.join(config_dir, "bccc.conf")
-sample_config_file = resource_filename(Requirement.parse("bccc"), "bccc.conf.sample")
+sample_config_file = resource_filename("bccc", "bccc.conf.sample")
 
 # Create a default config file if none exists
 if not os.path.isfile(config_file):

@@ -1,2 +1,2 @@
-include bccc.conf.sample
+include bccc/bccc.conf.sample
 include README.md
