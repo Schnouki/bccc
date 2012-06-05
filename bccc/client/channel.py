@@ -227,6 +227,13 @@ class Channel:
         res = self.client.ps.publish(self.client.channels_jid, node, payload=entry)
         return res["pubsub"]["publish"]["item"]["id"]
 
+    def retract(self, id_):
+        node = "/user/{}/posts".format(self.jid)
+        res = self.client.ps.retract(self.client.channels_jid, node, id_, notify=True)
+        with self.atoms_lock:
+            self.atoms.remove(id_)
+        return res
+
     def set_status(self, text, author_name=None):
         entry = self._make_atom(text, author_name=author_name)
         node = "/user/{}/status".format(self.jid)

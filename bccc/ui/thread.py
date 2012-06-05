@@ -12,12 +12,16 @@
 # specific language governing permissions and limitations under the License.
 
 import bisect
+import logging
 
 import urwid
 
 from bccc.ui import ItemWidget, PostWidget, ReplyWidget, \
                     NewPostWidget, NewReplyWidget
 from .util import extract_urls
+
+logger = logging.getLogger('bccc.ui.thread')
+logger.addHandler(logging.NullHandler())
 
 # {{{ ThreadList helper
 class ThreadList(list):
@@ -219,6 +223,32 @@ class ThreadsWalker(urwid.ListWalker):
         for pos, thr in enumerate(self.threads):
             if thr.id == thr_id:
                 return (pos, thr)
+
+    def remove(self, id_):
+        focus_pos = self.focus_item[1]
+
+        # Find post/reply with specified id
+        for (i, thr) in enumerate(self.threads):
+            for (j, w) in enumerate(thr):
+                if w.id == id_:
+                    # Remove item from thread
+                    del thr[j]
+
+                    # Remove empty threads and threads with just a placeholder
+                    if len(thr) == 0 or (len(thr) == 1 and type(thr[0]) is ItemWidget):
+                        del self.threads[i]
+
+                    # Add a placeholder for threads without a post
+                    elif type(w) is PostWidget:
+                        thr.insert(0, ItemWidget(id_, " ", " ", "[post deleted]"))
+
+                    # Give focus back to something that exists
+                    self._flatten()
+                    self.set_focus(focus_pos)
+                    if type(self.focus_item[0]) is urwid.Divider:
+                        pos = max(0, focus_pos-1)
+                        self.set_focus(pos)
+                    return
     # }}}
     # {{{ New post/reply management
     def new_post(self):
@@ -252,6 +282,24 @@ class ThreadsWalker(urwid.ListWalker):
             self.ui.status.set_text("")
             self.focus_item = self.focus_before_extra_widget
             self._modified()
+
+    def delete_item(self):
+        """Delete the focused item."""
+        w = self.focus_item[0]
+        if not isinstance(w, PostWidget):
+            return
+
+        def _delete_item(text):
+            text = text.strip().lower()
+            if text == "y":
+                id_ = w.id
+                logger.info("Deleting post %s", id_)
+                self.channel.retract(id_)
+                self.remove(id_)
+                self.ui.status.set_text("Post {} deleted.".format(id_))
+
+        question = "Really delete this? ({} - {}) [y/N]: ".format(w.author, w.date)
+        self.ui.status.ask(question, _delete_item)
     # }}}
 # }}}
 # {{{ ThreadsBox
@@ -288,6 +336,8 @@ class ThreadsBox(urwid.ListBox):
         key = super().keypress(size, key)
         if key == "d":
             self.update_description()
+        elif key == "delete":
+            self.content.delete_item()
         elif key == "G":
             self.content.goto_focused_post_channel()
         elif key == "n":

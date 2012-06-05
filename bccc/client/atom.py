@@ -167,6 +167,22 @@ class UpdatableAtomsList:
                 it._idx += 1
 
         return a
+
+    def remove(self, id_):
+        # Find Atom with given id
+        pos = None
+        for (i, a) in enumerate(self._list):
+            if a.id == id_:
+                pos = i
+                break
+        if pos is None:
+            return
+
+        # Remove it and update all iterators
+        del self._list[pos]
+        for it in self._iterators:
+            if it.idx >= pos:
+                it.idx -= 1
 # }}}
 
 # {{{ Atom in SleekXMPP stanzas

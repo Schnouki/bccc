@@ -179,6 +179,7 @@ Basic usage
 - If the focused post/reply contain URLs, you can open them in your browser by
   pressing `o`. This is especially useful for URLs longer than one line (other
   URLs may be handled correctly by your terminal emulator).
+- You can delete the focused post/reply with the `delete` key.
 
 ---
 
@@ -203,7 +204,6 @@ TODO
   new stanza types
 - handle errors: private channels, posting forbidden, etc.
 - handle subscriptions, affiliations, moderators, etc.
-- handle retracting posts (and getting notified about retracted posts)
 - persistence: save last known item ID for each channel in a database and tell
   how many new items there are after a relaunch
 
