@@ -154,14 +154,12 @@ class ThreadsWalker(urwid.ListWalker):
     def get_focused_post_urls(self):
         w = self.focus_item[0]
         if isinstance(w, PostWidget):
-            txt = w.item.content
-            return list(extract_urls(txt))
+            return list(extract_urls(w.text))
 
     def goto_focused_post_channel(self):
         w = self.focus_item[0]
         if isinstance(w, PostWidget):
-            jid = w.item.author
-            self.ui.channels.goto(jid)
+            self.ui.channels.goto(w.author)
     # }}}
     # {{{ Threads management
     def add(self, item):
@@ -239,7 +237,7 @@ class ThreadsWalker(urwid.ListWalker):
         elif hasattr(focus_w, "id"):
             thr_id = focus_w.id
         else:
-            # The focused item is probably not a post or a thread. Maybe a
+            # The focused item is probably not a post or a reply. Maybe a
             # divider, maybe something else?...
             return
 

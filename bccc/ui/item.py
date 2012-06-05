@@ -25,7 +25,10 @@ class ItemWidget(urwid.FlowWidget):
     attr_text   = ("post text", "focused post text")
 
     def __init__(self, id=None, author="", date="", text="", padding=0):
-        self.id = id
+        self._id = id
+        self._author = author
+        self._date = date
+        self._text = text
 
         # Init sub-widgets
         author_w = urwid.Text((" "*padding) + author, wrap="clip")
@@ -41,6 +44,18 @@ class ItemWidget(urwid.FlowWidget):
         self.widgets = (author_w, date_w, text_w)
         urwid.FlowWidget.__init__(self)
         self._selectable = True
+
+    @property
+    def id(self): return self._id
+
+    @property
+    def author(self): return self._author
+
+    @property
+    def date(self): return self._date
+
+    @property
+    def text(self): return self._text
 
     def keypress(self, size, key):
         return key
@@ -81,12 +96,15 @@ class ItemWidget(urwid.FlowWidget):
 # {{{ Single post/reply widget
 class PostWidget(ItemWidget):
     def __init__(self, post, padding=0):
-        self.item = post
+        self._item = post
 
         author = post.author
         date = post.published.astimezone(dateutil.tz.tzlocal()).strftime("%x - %X")
         text = post.content
         ItemWidget.__init__(self, post.id, author, date, text, padding)
+
+    @property
+    def item(self): return self._item
 
 class ReplyWidget(PostWidget):
     attr_author = ("reply author", "focused reply author")
@@ -95,13 +113,16 @@ class ReplyWidget(PostWidget):
 
     def __init__(self, reply):
         PostWidget.__init__(self, reply, padding=2)
-        self.in_reply_to = reply.in_reply_to
+        self._in_reply_to = reply.in_reply_to
+
+    @property
+    def in_reply_to(self): return self._in_reply_to
 
     def __lt__(self, other):
         return self.item.published < other.item.published
 
     def __eq__(self, other):
-        return type(other) is ReplyWidget and self.item.id == other.item.id
+        return type(other) is ReplyWidget and self.id == other.id
 
     def __hash__(self):
         return object.__hash__(self)
