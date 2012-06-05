@@ -20,8 +20,8 @@ from bccc.ui import ItemWidget, PostWidget, ReplyWidget, \
                     NewPostWidget, NewReplyWidget
 from .util import extract_urls
 
-logger = logging.getLogger('bccc.ui.thread')
-logger.addHandler(logging.NullHandler())
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 # {{{ ThreadList helper
 class ThreadList(list):
@@ -133,6 +133,7 @@ class ThreadsWalker(urwid.ListWalker):
     # }}}
     # {{{ Channel management
     def set_channel(self, channel):
+        log.info("Loading channel %s", channel.jid)
         del self.threads[:]
         self.extra_widget = None
         self.channel = channel
@@ -149,6 +150,7 @@ class ThreadsWalker(urwid.ListWalker):
 
     def _load_more_posts(self):
         if not self.more_posts_requested:
+            log.debug("Requesting more posts")
             after_id = None
             if self.oldest_item is not None:
                 after_id = self.oldest_item.id
@@ -167,6 +169,7 @@ class ThreadsWalker(urwid.ListWalker):
     # }}}
     # {{{ Threads management
     def add(self, item):
+        log.debug("Adding item %s", item.id)
         self.more_posts_requested = False
         if self.oldest_item is None or item.published < self.oldest_item.published:
             self.oldest_item = item
@@ -225,6 +228,7 @@ class ThreadsWalker(urwid.ListWalker):
                 return (pos, thr)
 
     def remove(self, id_):
+        log.debug("Removing item %s", id_)
         focus_pos = self.focus_item[1]
 
         # Find post/reply with specified id
@@ -293,7 +297,7 @@ class ThreadsWalker(urwid.ListWalker):
             text = text.strip().lower()
             if text == "y":
                 id_ = w.id
-                logger.info("Deleting post %s", id_)
+                log.info("Deleting post %s", id_)
                 self.channel.retract(id_)
                 self.remove(id_)
                 self.ui.status.set_text("Post {} deleted.".format(id_))
@@ -380,6 +384,7 @@ class ThreadsBox(urwid.ListBox):
         def _set_desc(text):
             text = text.strip()
             if len(text) > 0:
+                log.info("Setting channel description to %s", text)
                 self.content.channel.update_config(description=text)
         self.ui.status.ask("New channel description: ", _set_desc)
 
@@ -387,6 +392,7 @@ class ThreadsBox(urwid.ListBox):
         def _set_status(text):
             text = text.strip()
             if len(text) > 0:
+                log.info("Setting channel status to %s", text)
                 self.content.channel.set_status(text)
         self.ui.status.ask("New status message: ", _set_status)
 
@@ -394,6 +400,7 @@ class ThreadsBox(urwid.ListBox):
         def _set_title(text):
             text = text.strip()
             if len(text) > 0:
+                log.info("Setting channel title to %s", text)
                 self.content.channel.update_config(title=text)
         self.ui.status.ask("New channel title: ", _set_title)
 # }}}
