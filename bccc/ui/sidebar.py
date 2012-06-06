@@ -24,7 +24,7 @@ class ChannelBox(urwid.widget.BoxWidget):
         self.ui = ui
         self.channel = channel
         self.active = False
-        self.nb_unread = 0
+        self.unread_ids = set()
         user, domain = channel.jid.split("@", 1)
 
         # Domain: shorten my.long.domain.name into "mldn"
@@ -90,9 +90,11 @@ class ChannelBox(urwid.widget.BoxWidget):
             self.ui.threads_list.add_new_items(atoms)
         elif not first_post_ever:
             # Update unread counter
-            self.nb_unread += len(atoms)
-            if self.nb_unread > 0:
-                self.widget_notif.original_widget.set_text(" [{}]".format(self.nb_unread))
+            for a in atoms:
+                self.unread_ids.add(a.id)
+            nb_unread = len(self.unread_ids)
+            if nb_unread > 0:
+                self.widget_notif.original_widget.set_text(" [{}]".format(nb_unread))
                 self._invalidate()
 
     def pubsub_status_callback(self, atom):
@@ -116,7 +118,7 @@ class ChannelBox(urwid.widget.BoxWidget):
             self.widget_status.set_focus_map({None: "focused active channel status"})
 
             self.widget_notif.original_widget.set_text("")
-            self.nb_unread = 0
+            self.unread_ids.clear()
 
             self.display_config()
         else:
@@ -163,7 +165,7 @@ class ChannelBox(urwid.widget.BoxWidget):
         # First line: user, shortened domain, notif
         canv1, comb1 = None, None
         user_col, _ = self.widget_user.pack(focus=focus)
-        if self.nb_unread == 0:
+        if len(self.unread_ids) == 0:
             # No notification: just user + domain
             domain_col  = maxcol - user_col
             if domain_col > 0:
