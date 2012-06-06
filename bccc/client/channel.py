@@ -13,11 +13,15 @@
 
 import datetime
 from xml.etree import cElementTree as ET
+import logging
 import threading
 
 import dateutil.parser
 
 from bccc.client import Atom, ATOM_NS, ATOM_THR_NS, UpdatableAtomsList
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 # {{{ Exceptions
 class PostError(Exception):
@@ -36,6 +40,7 @@ class Channel:
     )
 
     def __init__(self, client, jid):
+        log.info("Initializing channel %s", jid)
         self.client = client
         self.jid = jid
 
@@ -222,12 +227,16 @@ class Channel:
         return entry
 
     def publish(self, text, author_name=None, in_reply_to=None):
+        log.debug("Publishing to channel %s...", self.jid)
         entry = self._make_atom(text, author_name=author_name, in_reply_to=in_reply_to)
         node = "/user/{}/posts".format(self.jid)
         res = self.client.ps.publish(self.client.channels_jid, node, payload=entry)
-        return res["pubsub"]["publish"]["item"]["id"]
+        id_ = res["pubsub"]["publish"]["item"]["id"]
+        log.info("Published to channel %s with id %s", self.jid, id_)
+        return id_
 
     def retract(self, id_):
+        log.debug("Retracting %s from channel %s", id_, self.jid)
         node = "/user/{}/posts".format(self.jid)
         res = self.client.ps.retract(self.client.channels_jid, node, id_, notify=True)
         with self.atoms_lock:
@@ -235,10 +244,13 @@ class Channel:
         return res
 
     def set_status(self, text, author_name=None):
+        log.debug("Setting status for channel %s...", self.jid)
         entry = self._make_atom(text, author_name=author_name)
         node = "/user/{}/status".format(self.jid)
         res = self.client.ps.publish(self.client.channels_jid, node, payload=entry)
-        return res["pubsub"]["publish"]["item"]["id"]
+        id_ = res["pubsub"]["publish"]["item"]["id"]
+        log.info("Status set for channel %s with id %s", self.jid, id_)
+        return id_
 
     def update_config(self, **kwds):
         # Create config form
@@ -248,6 +260,7 @@ class Channel:
             if dk in kwds:
                 form.add_field(var=ik, value=kwds[dk])
 
+        log.info("Updating config for channel %s", self.jid)
         node = "/user/{}/posts".format(self.jid)
         self.client.ps.set_node_config(self.client.channels_jid, node, form)
     # }}}

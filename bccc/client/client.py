@@ -11,6 +11,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+import logging
 import threading
 
 import sleekxmpp
@@ -19,6 +20,9 @@ from sleekxmpp.xmlstream.matcher import StanzaPath
 from sleekxmpp.xmlstream.handler import Callback
 
 from bccc.client.channel import Channel
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 # {{{ Exceptions
 class ClientError(Exception):
@@ -37,6 +41,7 @@ class Client(sleekxmpp.ClientXMPP):
 
     # {{{ Init, login, discovery, etc.
     def __init__(self, jid, password):
+        log.info("Initializing SleekXMPP client")
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
 
         self.channels_cond = threading.Condition()
@@ -67,6 +72,7 @@ class Client(sleekxmpp.ClientXMPP):
 
     def start(self, event):
         # Try to find channels service
+        log.info("Starting service discovery")
         items = self.disco.get_items(jid=self.boundjid.host, block=True)
 
         for jid, node, name in items["disco_items"]["items"]:
@@ -76,6 +82,7 @@ class Client(sleekxmpp.ClientXMPP):
                 continue
             for id_ in info["disco_info"]["identities"]:
                 if id_[0] == "pubsub" and id_[1] == "channels":
+                    log.info("Channels service found at %s", jid)
                     with self.channels_cond:
                         self.channels_jid = jid
                         self.channels_cond.notify()
@@ -149,6 +156,7 @@ class Client(sleekxmpp.ClientXMPP):
             elif chan_type == "status":
                 evt_type = EVENT_STATUS
             else:
+                log.debug("Unsupported node type for items event: %s", node)
                 return
             data = [item.get_payload() for item in items]
 
@@ -158,6 +166,7 @@ class Client(sleekxmpp.ClientXMPP):
             node = data["node"]
             jid, chan_type = node[6:].rsplit("/", 1)
             if chan_type != "posts":
+                log.debug("Unsupported node type for configuration event: %s", node)
                 return
 
         # Do we have everything we need?
