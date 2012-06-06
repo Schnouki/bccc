@@ -299,7 +299,6 @@ class ThreadsWalker(urwid.ListWalker):
                 id_ = w.id
                 log.info("Deleting post %s", id_)
                 self.channel.retract(id_)
-                self.remove(id_)
                 self.ui.status.set_text("Post {} deleted.".format(id_))
 
         question = "Really delete this? ({} - {}) [y/N]: ".format(w.author, w.date)
@@ -361,6 +360,11 @@ class ThreadsBox(urwid.ListBox):
     def add_new_items(self, items):
         for item in items:
             self.content.add(item)
+        self.content._modified()
+
+    def remove_items(self, item_ids):
+        for id_ in item_ids:
+            self.content.remove(id_)
         self.content._modified()
 
     def cancel_new_item(self):

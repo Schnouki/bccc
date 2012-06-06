@@ -136,29 +136,52 @@ class Client(sleekxmpp.ClientXMPP):
     def handle_pubsub_event(self, msg):
         evt = msg["pubsub_event"]
 
-        EVENT_POST = 1
-        EVENT_STATUS = 2
-        EVENT_CONFIG = 3
+        EVENT_POST    = 1
+        EVENT_RETRACT = 2
+        EVENT_STATUS  = 3
+        EVENT_CONFIG  = 4
 
         # Data about the event
         evt_type, data, jid = None, None, None
 
         if "items" in evt.keys():
             items = evt["items"]
+            if len(items) == 0:
+                return
+
             node = items["node"]
             if not node.startswith("/user/"):
                 return
 
+            # Make sure that all items have the same type (not a mix of posts
+            # and retract...)
+            # It's not required by any XEP, but handling different types in the
+            # same event would be much more complicated :/
+            items_types = set(type(it) for it in items)
+            if len(items_types) > 1:
+                log.error("PubSub event with several item types are not supported")
+                log.debug("Unsupported event: %s", str(evt))
+                raise ClientError("Got PubSub event with several item types")
+            items_type = items_types.pop()
+
             jid, chan_type = node[6:].rsplit("/", 1)
 
             if chan_type == "posts":
-                evt_type = EVENT_POST
+                if items_type is xep_0060.stanza.pubsub_event.EventItem:
+                    evt_type = EVENT_POST
+                    data = [item.get_payload() for item in items]
+                elif items_type is xep_0060.stanza.pubsub_event.EventRetract:
+                    evt_type = EVENT_RETRACT
+                    data = [item["id"] for item in items]
+                else:
+                    log.error("Unsupported items type: %s", str(items_type))
+                    raise ClientError("Got PubSub event in posts channel with unknown items type")
             elif chan_type == "status":
                 evt_type = EVENT_STATUS
+                data = [item.get_payload() for item in items]
             else:
                 log.debug("Unsupported node type for items event: %s", node)
                 return
-            data = [item.get_payload() for item in items]
 
         elif "configuration" in evt.keys():
             evt_type = EVENT_CONFIG
@@ -178,6 +201,8 @@ class Client(sleekxmpp.ClientXMPP):
 
         if evt_type == EVENT_POST:
             chan.handle_post_event(data)
+        elif evt_type == EVENT_RETRACT:
+            chan.handle_retract_event(data)
         elif evt_type == EVENT_STATUS:
             chan.handle_status_event(data)
         elif evt_type == EVENT_CONFIG:

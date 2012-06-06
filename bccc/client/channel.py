@@ -52,9 +52,10 @@ class Channel:
         self.oldest_id = None
 
         # Callbacks
-        self.callback_config = None
-        self.callback_post   = None
-        self.callback_status = None
+        self.callback_config  = None
+        self.callback_post    = None
+        self.callback_retract = None
+        self.callback_status  = None
 
     def __iter__(self):
         return iter(self.atoms)
@@ -62,11 +63,13 @@ class Channel:
     def __repr__(self):
         return "<bccc.client.Channel {}>".format(self.jid)
 
-    def set_callbacks(self, cb_config=None, cb_post=None, cb_status=None):
+    def set_callbacks(self, cb_config=None, cb_post=None, cb_retract=None, cb_status=None):
         if cb_config is not None:
             self.callback_config = cb_config
         if cb_post is not None:
             self.callback_post = cb_post
+        if cb_retract is not None:
+            self.callback_retract = cb_retract
         if cb_status is not None:
             self.callback_status = cb_status
 
@@ -82,6 +85,16 @@ class Channel:
                 atoms.append(a)
         if len(atoms) > 0 and self.callback_post is not None:
             self.callback_post(atoms)
+
+    def handle_retract_event(self, entries):
+        if len(entries) == 0:
+            return
+        # Remove retracted items from self.atoms
+        with self.atoms_lock:
+            for id_ in entries:
+                self.atoms.remove(id_)
+        if self.callback_retract is not None:
+            self.callback_retract(entries)
 
     def handle_status_event(self, entries):
         if len(entries) == 0:
@@ -238,10 +251,7 @@ class Channel:
     def retract(self, id_):
         log.debug("Retracting %s from channel %s", id_, self.jid)
         node = "/user/{}/posts".format(self.jid)
-        res = self.client.ps.retract(self.client.channels_jid, node, id_, notify=True)
-        with self.atoms_lock:
-            self.atoms.remove(id_)
-        return res
+        self.client.ps.retract(self.client.channels_jid, node, id_, notify=True)
 
     def set_status(self, text, author_name=None):
         log.debug("Setting status for channel %s...", self.jid)
