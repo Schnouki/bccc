@@ -12,7 +12,7 @@
 # specific language governing permissions and limitations under the License.
 
 from .atom import Atom, ATOM_NS, ATOM_THR_NS, AS_NS, UpdatableAtomsList
-from .channel import Channel
+from .channel import Channel, ChannelError, InvalidChannelName
 from .client import Client
 
 # Local Variables:

@@ -19,7 +19,7 @@ from sleekxmpp.exceptions import IqError
 from sleekxmpp.xmlstream.matcher import StanzaPath
 from sleekxmpp.xmlstream.handler import Callback
 
-from bccc.client.channel import Channel
+from bccc.client.channel import Channel, ChannelError
 
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
@@ -117,8 +117,11 @@ class Client(sleekxmpp.ClientXMPP):
         subnode = "/user/" + self.boundjid.bare + "/subscriptions"
         items = self.ps.get_items(self.channels_jid, subnode, block=True)
         for item in items["pubsub"]["items"]:
-            chan = self.get_channel(item["id"])
-            channels.append(chan)
+            try:
+                chan = self.get_channel(item["id"])
+                channels.append(chan)
+            except ChannelError:
+                pass
         return channels
 
     def get_channel(self, jid, force_new=False):

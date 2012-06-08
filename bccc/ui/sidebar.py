@@ -16,6 +16,8 @@ import datetime
 import dateutil.tz
 import urwid
 
+from bccc.client import ChannelError
+
 # {{{ Channel box
 class ChannelBox(urwid.widget.BoxWidget):
     _oldest_date = datetime.datetime.fromtimestamp(0, tz=dateutil.tz.tzlocal())
@@ -267,7 +269,10 @@ class ChannelsList(urwid.ListBox):
         chan_box = self.active_channel
         idx = self._channels.index(chan_box)
 
-        new_chan = self.ui.client.get_channel(chan_box.channel.jid, force_new=True)
+        try:
+            new_chan = self.ui.client.get_channel(chan_box.channel.jid, force_new=True)
+        except ChannelError:
+            return # TODO: display warning
         new_chan_box = ChannelBox(self.ui, new_chan)
         self._channels[idx] = new_chan_box
         self.make_active(new_chan_box)
@@ -295,7 +300,10 @@ class ChannelsList(urwid.ListBox):
 
             # If it's not, add it
             if chan_idx is None:
-                channel = self.ui.client.get_channel(jid)
+                try:
+                    channel = self.ui.client.get_channel(jid)
+                except ChannelError:
+                    return # TODO: display warning
                 chan = ChannelBox(self.ui, channel)
                 self._channels.append(chan)
                 chan_idx = len(self._channels) - 1

@@ -24,9 +24,15 @@ log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
 # {{{ Exceptions
-class PostError(Exception):
-    """Error when handling a post"""
+class ChannelError(Exception):
+    """A generic error in a buddycloud channel"""
     pass
+class InvalidChannelName(ChannelError):
+    """Invalid channel name, such as user@ or @topics.buddycloud.org"""
+    def __init__(self, jid):
+        msg = "Invalid channel name: {}".format(jid)
+        log.warning(msg)
+        super().__init__(msg)
 # }}}
 # {{{ Channels
 class Channel:
@@ -41,6 +47,12 @@ class Channel:
 
     def __init__(self, client, jid):
         log.info("Initializing channel %s", jid)
+
+        # Avoid invalid channel names
+        user, domain = jid.split("@", 1)
+        if len(user) == 0 or len(domain) == 0:
+            raise InvalidChannelName(jid)
+
         self.client = client
         self.jid = jid
 
