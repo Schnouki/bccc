@@ -11,9 +11,9 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-from .atom import Atom, ATOM_NS, ATOM_THR_NS, AS_NS, UpdatableAtomsList
+from .atom import Atom, AtomError, ATOM_NS, ATOM_THR_NS, AS_NS, UpdatableAtomsList
 from .channel import Channel, ChannelError, InvalidChannelName
-from .client import Client
+from .client import Client, ClientError
 
 # Local Variables:
 # mode: python3
