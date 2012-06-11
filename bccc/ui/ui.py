@@ -136,6 +136,14 @@ class UI:
                 self._cb_queue.task_done()
         except queue.Empty:
             pass
+
+    def safe_status_set_text(self, txt):
+        """Thread-safe, queued version of ui.status.set_text()
+
+        Mostly for use in Urwid interals, where changing the status text could
+        change a widget's size in the middle of a rendering process."""
+        self._cb_queue.put((self.status.set_text, [txt], {}))
+        os.write(self._cb_fd, b"x")
     # }}}
     # {{{ Desktop interaction
     def open_urls(self, *urls):

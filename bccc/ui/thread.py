@@ -312,15 +312,52 @@ class ThreadsBox(urwid.ListBox):
         self.ui = ui
         self.content = ThreadsWalker(ui)
         self._pref_col = 0
+        self.top_item = None
         super().__init__(self.content)
 
-    # Lame workaround for an Urwid bug: rendering a ListBox can trigger 2 calls
-    # to ListWalker.set_focus(). Which, here, will change the status bar,
-    # possibly changing the number of lines required to render it, causing
-    # render to fail with an assertion error.
-    def render(self, *args, **kwds):
+    def render(self, size, focus=False):
+        # Lame workaround for an Urwid bug: rendering a ListBox can trigger 2
+        # calls to ListWalker.set_focus(). Which, here, will change the status
+        # bar, possibly changing the number of lines required to render it,
+        # causing render to fail with an assertion error.
         self.content.block_status_update = True
-        ret = super().render(*args, **kwds)
+
+        # If there's a new top item and if it's not visible, try to make it
+        # visible -- invisible new posts are confusing for everyone.
+        # FIXME: using self.content.flat_threads directly is ugly :(
+        if len(self.content.flat_threads) > 0:
+            previous_top_item = self.top_item
+            new_top_item = self.content.flat_threads[0]
+            ev = self.ends_visible(size, focus)
+
+            if "top" not in ev and previous_top_item is not new_top_item:
+                log.debug("New item is not visible, trying to shift focus")
+                maxcol, maxrow = size
+
+                # We need the height of the focused widget and of all the
+                # widgets above it
+                focus = self.content.get_focus()
+                focus_rows = 0
+                if focus[0] is not None:
+                    _, focus_rows = focus[0].pack((maxcol,), True)
+
+                nb_rows = 0
+                for w in self.content.flat_threads[0:focus[1]]:
+                    _, rows = w.pack((maxcol,), False)
+                    nb_rows += rows
+
+                # We don't want the focused widget to be hidden, so we can't
+                # shift focus by more than (maxrow - focus_rows) lines.
+                if nb_rows < maxrow - focus_rows:
+                    log.debug("Shifting focus by %d lines (ListBox: %d lines, focused widget: %d lines)", nb_rows, maxrow, focus_rows)
+                    self.shift_focus(size, nb_rows)
+                else:
+                    log.debug("Focus can not be shifted (%d lines >= %d - %d), telling the user...", nb_rows, maxrow, focus_rows)
+                    self.ui.safe_status_set_text("New content is available, scroll to top to see it")
+
+            self.top_item = new_top_item
+
+        ret = super().render(size, focus)
         self.content.block_status_update = False
         return ret
 
@@ -378,6 +415,7 @@ class ThreadsBox(urwid.ListBox):
             self.set_focus(pos, coming_from="above")
 
     def set_active_channel(self, channel):
+        self.top_item = None
         self.content.set_channel(channel)
 
     def update_description(self):
