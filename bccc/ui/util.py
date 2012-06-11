@@ -11,9 +11,13 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+import logging
 import re
 
 import urwid
+
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
 
 # {{{ Boxed edit widget
 class BoxedEdit(urwid.AttrMap):
@@ -67,9 +71,11 @@ class SmartStatusBar(urwid.WidgetWrap):
         self._frm = frm
 
     def set_text(self, txt):
+        log.debug("New status bar text: %s", txt)
         return self._txt.set_text(txt)
 
     def ask(self, caption, callback):
+        log.debug("New status bar question: %s", caption)
         self._edit.set_caption(("status bar question", caption))
         self._edit.edit_text = ""
         self._edit_callback = callback
@@ -82,6 +88,7 @@ class SmartStatusBar(urwid.WidgetWrap):
 
     def keypress(self, size, key):
         if key == "enter":
+            log.debug("Status bar answer: %s", self._edit_.edit_text)
             self._edit_callback(self._edit.edit_text)
             self._restore_text()
         elif key == "esc":
