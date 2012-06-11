@@ -88,7 +88,7 @@ class SmartStatusBar(urwid.WidgetWrap):
 
     def keypress(self, size, key):
         if key == "enter":
-            log.debug("Status bar answer: %s", self._edit_.edit_text)
+            log.debug("Status bar answer: %s", self._edit.edit_text)
             self._edit_callback(self._edit.edit_text)
             self._restore_text()
         elif key == "esc":
