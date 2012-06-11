@@ -119,7 +119,7 @@ This is due to these versions of setuptools/distribute not being correctly
 updated for Python 3, where the `execfile` function is no longer available.
 
 To fix it, edit your `/usr/local/bin/bccc` file and replace the
-`execfile(__file)` line with the following one:
+`execfile(__file__)` line with the following one:
 
     exec(compile(open(__file__).read(), __file__, 'exec'))
 
@@ -188,8 +188,9 @@ then its replies in chronological order. Most recently updated threads are
 listed first.
 
 When new content is posted to the active channel, the corresponding thread will
-be moved to the top, so in case of a new post you may have to scroll to see it.
-*This behavior may change in the future.*
+be moved to the top, and the view will scroll so that you can see it. If it
+can't scroll enough without hiding the currently focused item, a message will be
+displayed in the status bar instead.
 
 When new content is posted to an inactive channel, the channel will be moved to
 the top of the sidebar and the number of unread items will be displayed next to
