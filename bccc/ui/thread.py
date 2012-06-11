@@ -50,9 +50,6 @@ class ThreadsWalker(urwid.ListWalker):
         self.items_iterator = None
         self.focus_item = (None, None)
 
-        # Indicator that status bar should not be updated while rendering
-        self.block_status_update = False
-
         # Extra widget: new post or new reply
         self.extra_widget = None
         self.focus_before_extra_widget = None
@@ -106,13 +103,12 @@ class ThreadsWalker(urwid.ListWalker):
         item = self.flat_threads[position]
         self.focus_item = (item, position)
 
-        if not self.block_status_update:
-            # Which thread number is that?
-            for (pos, thr) in enumerate(self.threads):
-                if item in thr:
-                    thr_nb = pos+1
-                    self.ui.status.set_text("{}: thread {}/{}".format(self.channel.jid, thr_nb, len(self.threads)))
-                    break
+        # Which thread number is that?
+        for (pos, thr) in enumerate(self.threads):
+            if item in thr:
+                thr_nb = pos+1
+                self.ui.safe_status_set_text("{}: thread {}/{}".format(self.channel.jid, thr_nb, len(self.threads)))
+                break
 
         self._modified(False)
 
@@ -316,12 +312,6 @@ class ThreadsBox(urwid.ListBox):
         super().__init__(self.content)
 
     def render(self, size, focus=False):
-        # Lame workaround for an Urwid bug: rendering a ListBox can trigger 2
-        # calls to ListWalker.set_focus(). Which, here, will change the status
-        # bar, possibly changing the number of lines required to render it,
-        # causing render to fail with an assertion error.
-        self.content.block_status_update = True
-
         # If there's a new top item and if it's not visible, try to make it
         # visible -- invisible new posts are confusing for everyone.
         # FIXME: using self.content.flat_threads directly is ugly :(
@@ -357,9 +347,7 @@ class ThreadsBox(urwid.ListBox):
 
             self.top_item = new_top_item
 
-        ret = super().render(size, focus)
-        self.content.block_status_update = False
-        return ret
+        return super().render(size, focus)
 
     # Stupid and ugly workaround for an Urwid bug: self.pref_col can be "left"
     # or "right", but parts of the code assume it's an integer and compare it
