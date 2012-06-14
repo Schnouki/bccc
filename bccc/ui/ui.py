@@ -15,10 +15,12 @@ import functools
 import os
 import queue
 import subprocess
+import sys
 import threading
 
 import urwid
 
+import bccc.client
 from bccc.ui import ChannelsList, ThreadsBox
 from .util import SmartStatusBar
 
@@ -26,11 +28,26 @@ from .util import SmartStatusBar
 class UI:
     """The Urwid UI"""
 
-    # {{{ Constructor
-    def __init__(self, conf, client):
+    # {{{ Constructor/destructor
+    def __init__(self, conf):
         self.conf = conf
-        self.client = client
 
+        # {{{ Client
+        # Get credentials
+        if not conf.has_option("buddycloud", "jid") or not conf.has_option("buddycloud", "password"):
+            print("JID and/or password is missing in configuration file", file=sys.stderr)
+            sys.exit(1)
+
+        self.client = bccc.client.Client(conf.get("buddycloud", "jid"), conf.get("buddycloud", "password"))
+        if not self.client.connect():
+            print("Unable to connect", file=sys.stderr)
+            sys.exit(1)
+
+        # Run client.process() in a daemonized thread to avoid blocking when exiting
+        client_thread = threading.Thread(target=lambda: self.client.process(block=True))
+        client_thread.daemon = True
+        client_thread.start()
+        # }}}
         # {{{ Palette
         palette = []
         for key, val in conf.items("ui"):
@@ -99,6 +116,7 @@ class UI:
     def run(self):
         self.channels.load_channels()
         self.loop.run()
+        self.client.disconnect()
 
     def input_filter(self, keys, raw):
         return keys

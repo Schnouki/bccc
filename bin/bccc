@@ -20,9 +20,8 @@ import os, os.path
 from pkg_resources import resource_filename
 import shutil
 import sys
-import threading
 
-import bccc.client, bccc.ui
+import bccc.ui
 
 config_dir = os.getenv("XDG_CONFIG_HOME", "~/.config")
 config_dir = os.path.expanduser(os.path.join(config_dir, "bccc"))
@@ -78,24 +77,9 @@ if conf.has_option("log", "filename") and len(conf.get("log", "filename")) > 0:
                         filename=log_filename,
                         filemode="w")
 
-# Get credentials
-if not conf.has_option("buddycloud", "jid") or not conf.has_option("buddycloud", "password"):
-    print("JID and/or password is missing in configuration file", file=sys.stderr)
-    sys.exit(1)
-
-client = bccc.client.Client(conf.get("buddycloud", "jid"), conf.get("buddycloud", "password"))
-if not client.connect():
-    print("Unable to connect", file=sys.stderr)
-    sys.exit(1)
-
-# Run client.process() in a daemonized thread to avoid blocking when exiting
-client_thread = threading.Thread(target=lambda: client.process(block=True))
-client_thread.daemon = True
-client_thread.start()
-
-ui = bccc.ui.UI(conf, client)
+# Start the UI (which will start the client)
+ui = bccc.ui.UI(conf)
 ui.run()
-client.disconnect()
 
 # Local Variables:
 # mode: python3
