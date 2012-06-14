@@ -29,20 +29,23 @@ bccc uses the following libraries:
 - [dateutil](http://pypi.python.org/pypi/python-dateutil), everything you need
   for manipulating dates and times in Python (tested with v2.0)
 - [dnspython3](http://pypi.python.org/pypi/dnspython3/), a DNS toolkit (optional)
+- [pyasn1](http://pypi.python.org/pypi/pyasn1/) and
+  [pyasn1-modules](http://pypi.python.org/pypi/pyasn1-modules/), a library used
+  by SleekXMPP to verify SSL certificates (optional)
 
 You can install them using [pip3](http://www.pip-installer.org/) (`python-pip`
 package in Arch Linux) or `easy_install3` (`python3-setuptools` package in
 Debian/Ubuntu):
 
     # Global installation (in /usr or /usr/local):
-    sudo pip3 install urwid sleekxmpp python-dateutil dnspython3
+    sudo pip3 install urwid sleekxmpp python-dateutil dnspython3 pyasn1{,-modules}
     # or
-    sudo easy_install3 urwid sleekxmpp python-dateutil dnspython3
+    sudo easy_install3 urwid sleekxmpp python-dateutil dnspython3 pyasn1{,-modules}
 
     # User installation (in $HOME):
-    pip3 install --user urwid sleekxmpp python-dateutil dnspython3
+    pip3 install --user urwid sleekxmpp python-dateutil dnspython3 pyasn1{,-modules}
     # or
-    sudo easy_install3 --user urwid sleekxmpp python-dateutil dnspython3
+    sudo easy_install3 --user urwid sleekxmpp python-dateutil dnspython3 pyasn1{,-modules}
 
 (If you're using Debian/Ubuntu, you will need to install `python3-dev` and `gcc`
 first.)
@@ -51,7 +54,7 @@ If you use [Arch Linux](http://archlinux.org/), you're awesome! And if you have
 installed [yaourt](https://aur.archlinux.org/packages.php?ID=5863) (or any other
 AUR helper), you can install all of these with the following command:
 
-    yaourt -S python-{urwid,sleekxmpp-git,dateutil,dnspython}
+    yaourt -S python-{urwid,sleekxmpp-git,dateutil,dnspython,pyasn1,pyasn1-modules}
 
 After doing all of this, you can install bccc from its Git repository:
 
