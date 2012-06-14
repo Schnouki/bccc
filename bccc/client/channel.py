@@ -46,7 +46,7 @@ class Channel:
     )
 
     def __init__(self, client, jid):
-        log.info("Initializing channel %s", jid)
+        log.debug("Initializing channel %s", jid)
 
         # Avoid invalid channel names
         user, domain = jid.split("@", 1)
