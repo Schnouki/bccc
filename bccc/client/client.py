@@ -103,15 +103,18 @@ class Client(sleekxmpp.ClientXMPP):
 
         if self.channels_jid is None:
             raise ClientError("No channels service found.")
+
+    def ready(self):
+        # Wait until the client is ready and the channels JID is available
+        with self.channels_cond:
+            while self.channels_jid is None:
+                self.channels_cond.wait()
     # }}}
     # {{{ Channels management
     def get_channels(self):
         """ Get subscribed channels (synchronously)"""
         # TODO: make that asynchronous! (but handling user's channel will be tricky)
-        # Wait for the channels JID to be available
-        with self.channels_cond:
-            while self.channels_jid is None:
-                self.channels_cond.wait()
+        self.ready()
 
         channels = []
         subnode = "/user/" + self.boundjid.bare + "/subscriptions"
@@ -125,11 +128,10 @@ class Client(sleekxmpp.ClientXMPP):
         return channels
 
     def get_channel(self, jid, force_new=False):
+        self.ready()
+
         if jid in self.channels and not force_new:
             return self.channels[jid]
-
-        if self.channels_jid is None:
-            raise ClientError("Channels service is not ready yet")
 
         chan = Channel(self, jid)
         self.channels[jid] = chan
