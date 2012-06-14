@@ -12,6 +12,7 @@
 # specific language governing permissions and limitations under the License.
 
 import functools
+import logging
 import os
 import queue
 import subprocess
@@ -24,6 +25,9 @@ import bccc.client
 from bccc.ui import ChannelsList, ThreadsBox
 from .util import SmartStatusBar
 
+log = logging.getLogger(__name__)
+log.addHandler(logging.NullHandler())
+
 # {{{ UI class
 class UI:
     """The Urwid UI"""
@@ -32,15 +36,32 @@ class UI:
     def __init__(self, conf):
         self.conf = conf
 
+        # {{{ Early logging
+        class EarlyFormatter(logging.Formatter):
+            def format(self, record):
+                if record.levelno == logging.INFO:
+                    return record.message
+                else:
+                    return "[{record.levelname}] {record.message}".format(record=record)
+
+        self._early_log = logging.StreamHandler(stream=sys.stderr)
+        self._early_log.setLevel(logging.INFO)
+        self._early_log.setFormatter(EarlyFormatter())
+
+        logging.getLogger("").addHandler(self._early_log)
+        # }}}
+
         # {{{ Client
         # Get credentials
         if not conf.has_option("buddycloud", "jid") or not conf.has_option("buddycloud", "password"):
             print("JID and/or password is missing in configuration file", file=sys.stderr)
             sys.exit(1)
 
-        self.client = bccc.client.Client(conf.get("buddycloud", "jid"), conf.get("buddycloud", "password"))
+        jid, password = conf.get("buddycloud", "jid"), conf.get("buddycloud", "password")
+        self.client = bccc.client.Client(jid, password)
+        print("Logging in as {jid}...".format(jid=jid), file=sys.stderr)
         if not self.client.connect():
-            print("Unable to connect", file=sys.stderr)
+            print("Unable to connect to server!", file=sys.stderr)
             sys.exit(1)
 
         # Run client.process() in a daemonized thread to avoid blocking when exiting
@@ -114,9 +135,21 @@ class UI:
     # }}}
     # {{{ Urwid run-time
     def run(self):
+        # Make sure the client is ready
+        self.client.ready()
+
+        # Once ready, disable early logging
+        logging.getLogger("").removeHandler(self._early_log)
+
+        # Load subscribed channels and start the UI
+        print("Loading subscribed channels", file=sys.stderr)
         self.channels.load_channels()
+        print("Starting the UI", file=sys.stderr)
         self.loop.run()
+
+        # About to exit: do some cleanup
         self.client.disconnect()
+        print("Bye bye!", file=sys.stderr)
 
     def input_filter(self, keys, raw):
         return keys
