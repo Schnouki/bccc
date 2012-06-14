@@ -1,2 +1,4 @@
 include bccc/bccc.conf.sample
+include bccc/dark.theme
+include bccc/light.theme
 include README.md

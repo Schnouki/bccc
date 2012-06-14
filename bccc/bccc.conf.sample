@@ -10,82 +10,15 @@ filename = ~/.bccc.log
 # Log level. Possible values: debug, info, warning, error, critical.
 level = warning
 
+[ui]
+# Name of the color theme to use. The theme file must be named <name>.theme and
+# be located either in the bccc installation dir (mostly for default themes) or
+# in $XDG_CONFIG_HOME/bccc (usually ~/.config/bccc).
+# Two default themes are available: "dark" and "light".
+theme = dark
+
 [url]
 # Program used to open URLs. On Linux (and other FreeDesktop-compliant systems),
 # "xdg-open" is usually a good choice. You can also set this to your web browser
 # (firefox, chromium, uzbl, etc.) if you want to.
 opener = xdg-open
-
-[ui]
-# Palette used to render the UI.
-# The defaults values look well in terminals with a dark background, but are not
-# suited for light backgrounds.
-
-# Each entry is a semicolon-separated list: fg, bg, mono, fg-hi, bg-hi. Each
-# value is a "color tuple": a comma-separated list with a color name and some
-# optional settings (full list below).
-
-# "fg" and "bg" are foreground and background colors, "mono" is for monochrome
-# terminals (so settings only), fg-hi and bg-hi are high-color versions of fg
-# and bg for terminals that support high-color mode (such as urxvt).
-
-# Available colors: default, black, dark red, dark green, brown, dark blue, dark
-# magenta, dark cyan, light gray, dark gray, light red, light green, yellow,
-# light blue, light magenta, light cyan, white
-
-# Available settings: bold, underline, blink, standout
-
-# High-color values: HTML-like values (&009, &fcc... '&' is used instead of '#'
-# since '#' is already used for comments), gray levels (g0 - black, g100 -
-# white), high-color numbers (h0 - color 0, h255 - color 255)
-
-sidebar = light gray; dark blue
-info bar = ; dark blue
-
-info bar left = white; dark blue
-info bar right = light gray; dark blue
-
-status bar = light gray,standout
-status bar question = white
-status bar input = light gray
-
-channel user = yellow; dark blue
-channel domain = light gray; dark blue
-channel notif = light green; dark blue
-channel status = light gray; dark blue
-focused channel user = yellow; dark magenta
-focused channel domain = light gray; dark magenta
-focused channel notif = light green; dark magenta
-focused channel status = light gray; dark magenta
-active channel user = yellow; dark red
-active channel domain = light gray; dark red
-active channel notif = light green; dark red
-active channel status = light gray; dark red
-focused active channel user = yellow; light red
-focused active channel domain = light gray; light red
-focused active channel notif = light green; light red
-focused active channel status = light gray; light red
-
-post author = brown
-post date = dark green
-post text = light gray
-focused post author = yellow
-focused post date = light green
-focused post text = white
-
-new post box = dark cyan
-new post text = light gray
-focused new post box = light cyan
-focused new post text = white
-
-reply author = dark cyan
-reply date = dark green
-reply text = light gray
-focused reply author = light cyan
-focused reply date = light green
-focused reply text = white
-
-new reply box = dark green
-new reply text = light gray
-focused new reply box = light green
-focused new reply text = white

@@ -1,0 +1,71 @@
+[theme]
+# Theme for terminals with a light background
+
+# Each entry is a semicolon-separated list: fg, bg, mono, fg-hi, bg-hi. Each
+# value is a "color tuple": a comma-separated list with a color name and some
+# optional settings (full list below).
+
+# "fg" and "bg" are foreground and background colors, "mono" is for monochrome
+# terminals (so settings only), fg-hi and bg-hi are high-color versions of fg
+# and bg for terminals that support high-color mode (such as urxvt).
+
+# Available colors: default, black, dark red, dark green, brown, dark blue, dark
+# magenta, dark cyan, light gray, dark gray, light red, light green, yellow,
+# light blue, light magenta, light cyan, white
+
+# Available settings: bold, underline, blink, standout
+
+# High-color values: HTML-like values (&009, &fcc... '&' is used instead of '#'
+# since '#' is already used for comments), gray levels (g0 - black, g100 -
+# white), high-color numbers (h0 - color 0, h255 - color 255)
+
+sidebar = light gray; dark blue
+info bar = ; dark blue
+
+info bar left = white; dark blue
+info bar right = light gray; dark blue
+
+status bar = black; light gray
+status bar question = white; dark gray
+status bar input = black
+
+channel user = yellow; dark blue
+channel domain = light gray; dark blue
+channel notif = light green; dark blue
+channel status = light gray; dark blue
+focused channel user = yellow; dark magenta
+focused channel domain = light gray; dark magenta
+focused channel notif = light green; dark magenta
+focused channel status = light gray; dark magenta
+active channel user = yellow; dark red
+active channel domain = light gray; dark red
+active channel notif = light green; dark red
+active channel status = light gray; dark red
+focused active channel user = yellow; light red
+focused active channel domain = light gray; light red
+focused active channel notif = light green; light red
+focused active channel status = light gray; light red
+
+post author = brown
+post date = dark green
+post text = black
+focused post author = yellow; dark gray
+focused post date = light green; dark gray
+focused post text = white; dark gray
+
+new post box = dark cyan
+new post text = black
+focused new post box = light cyan; dark gray
+focused new post text = white; dark gray
+
+reply author = dark cyan
+reply date = dark green
+reply text = black
+focused reply author = light cyan; dark gray
+focused reply date = light green; dark gray
+focused reply text = white; dark gray
+
+new reply box = dark green
+new reply text = black
+focused new reply box = light green; dark gray
+focused new reply text = white; dark gray

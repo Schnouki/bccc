@@ -77,8 +77,31 @@ if conf.has_option("log", "filename") and len(conf.get("log", "filename")) > 0:
                         filename=log_filename,
                         filemode="w")
 
+# Load theme
+theme = {}
+if conf.has_option("ui", "theme") and len(conf.get("ui", "theme")) > 0:
+    theme_name = conf.get("ui", "theme")
+
+    fn = os.path.join(config_dir, theme_name + ".theme")
+    if not os.path.isfile(fn):
+        fn = resource_filename("bccc", theme_name + ".theme")
+        if not os.path.isfile(fn):
+            print("Theme not found: {}".format(theme_name), file=sys.stderr)
+            sys.exit(1)
+
+    theme_conf = configparser.ConfigParser()
+    if len(theme_conf.read([fn])) == 0:
+        print("Could not read theme from {}".format(fn), file=sys.stderr)
+        sys.exit(1)
+
+    theme = dict(theme_conf.items("theme"))
+else:
+    # Actually bccc "works" with an empty theme, but it's completely unusable...
+    print("Theme name is missing in configuration file", file=sys.stderr)
+    sys.exit(1)
+
 # Start the UI (which will start the client)
-ui = bccc.ui.UI(conf)
+ui = bccc.ui.UI(conf, theme)
 ui.run()
 
 # Local Variables:

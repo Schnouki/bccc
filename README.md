@@ -140,11 +140,10 @@ in the Git repository, in `bccc/bccc.conf.sample`. You should copy it to
 `~/.config/bccc/bccc.conf`, make sure it is only readable by you (`chmod 600
 ~/.config/bccc/bccc.conf`), and edit it to adjust your login and password.
 
-This configuration file also contains the full palette used to render the UI.
-The values in the sample file work well for a dark terminal (see screenshot),
-but will need some adjustment if you use a light background. In particular you
-will need to change "post text", "reply text" and their "focused" counterparts
-to dark colors ("black", "black,bold"), as well as the status bar.
+This configuration file also contains the name of the theme used to render the
+UI. Two sample themes are bundled with bccc: "dark" for terminals with a dark
+background, and "light" for terminals with a light backgrounds. You can of
+course write your own theme; feel free to share it here if you write a nice one!
 
 
 Basic usage

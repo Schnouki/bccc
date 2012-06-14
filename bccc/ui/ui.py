@@ -32,8 +32,8 @@ log.addHandler(logging.NullHandler())
 class UI:
     """The Urwid UI"""
 
-    # {{{ Constructor/destructor
-    def __init__(self, conf):
+    # {{{ Constructor
+    def __init__(self, conf, theme):
         self.conf = conf
 
         # {{{ Early logging
@@ -50,7 +50,6 @@ class UI:
 
         logging.getLogger("").addHandler(self._early_log)
         # }}}
-
         # {{{ Client
         # Get credentials
         if not conf.has_option("buddycloud", "jid") or not conf.has_option("buddycloud", "password"):
@@ -71,7 +70,7 @@ class UI:
         # }}}
         # {{{ Palette
         palette = []
-        for key, val in conf.items("ui"):
+        for key, val in theme.items():
             attr = [a.strip() for a in val.split(";")]
             # Make sure there are enough entries
             if len(attr) in (1, 4):
