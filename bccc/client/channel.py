@@ -38,6 +38,7 @@ class InvalidChannelName(ChannelError):
 class Channel:
     """A buddycloud channel, tied to a client"""
 
+    # {{{ Channel init
     CONFIG_MAP = (
         ("title",       "pubsub#title"),
         ("description", "pubsub#description"),
@@ -81,7 +82,20 @@ class Channel:
             self.callback_post = cb_post
         if cb_status is not None:
             self.callback_status = cb_status
-
+    # }}}
+    # {{{ Subscriptions/affiliations
+    def get_subscriptions(self):
+        channels = []
+        subnode = "/user/" + self.jid + "/subscriptions"
+        items = self.client.ps.get_items(self.client.channels_jid, subnode, block=True)
+        for item in items["pubsub"]["items"]:
+            try:
+                chan = self.client.get_channel(item["id"])
+                channels.append(chan)
+            except ChannelError:
+                pass
+        return channels
+    # }}}
     # {{{ PubSub event handlers
     def handle_post_event(self, entries):
         # Incoming entries: add them and trigger the callback

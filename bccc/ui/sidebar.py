@@ -235,8 +235,11 @@ class ChannelsList(urwid.ListBox):
             return urwid.ListBox.keypress(self, size, key)
 
     def load_channels(self):
-        # Request channels from the client
-        chans = self.ui.client.get_channels()
+        # Request user channel
+        user_chan = self.ui.client.get_channel()
+
+        # Request user subscriptions
+        chans = user_chan.get_subscriptions()
 
         # First empty the list
         del self._channels[:]
