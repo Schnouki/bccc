@@ -205,6 +205,11 @@ class UI:
         thr = threading.Thread(target=_open_urls)
         thr.daemon = True
         thr.start()
+
+    def notify(self):
+        # Console beep -- good terminal emulators map this to the X11 "urgency" hint
+        if (not self.conf.has_option("ui", "console_beep")) or self.conf.getboolean("ui", "console_beep"):
+            print("\a", end="")
     # }}}
 # }}}
 # Local Variables:

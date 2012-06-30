@@ -99,12 +99,16 @@ class ChannelBox(urwid.widget.BoxWidget):
                 self.widget_notif.original_widget.set_text(" [{}]".format(nb_unread))
                 self._invalidate()
 
+        self.ui.notify()
+
     def pubsub_status_callback(self, atom):
         self.widget_status.original_widget.set_text(atom.content)
         self._invalidate()
+        self.ui.notify()
 
     def pubsub_config_clalback(self, conf):
         self.set_config(conf)
+        self.ui.notify()
     # }}}
     # {{{ Channel management
     def set_active(self, active):
