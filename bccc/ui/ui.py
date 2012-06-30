@@ -192,8 +192,7 @@ class UI:
 
         Mostly for use in Urwid interals, where changing the status text could
         change a widget's size in the middle of a rendering process."""
-        self._cb_queue.put((self.status.set_text, [txt], {}))
-        os.write(self._cb_fd, b"x")
+        self.safe_callback(self.status.set_text)(txt)
     # }}}
     # {{{ Desktop interaction
     def open_urls(self, *urls):
