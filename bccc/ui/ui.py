@@ -146,6 +146,9 @@ class UI:
         print("Starting the UI", file=sys.stderr)
         self.loop.run()
 
+        # Clear XTerm alternate buffer before exiting
+        print("\033[?47h\033[2J\033[?47l", end="")
+
         # About to exit: do some cleanup
         self.client.disconnect()
         print("Bye bye!", file=sys.stderr)
