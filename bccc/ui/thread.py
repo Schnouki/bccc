@@ -207,7 +207,8 @@ class ThreadsWalker(urwid.ListWalker):
                     thr.append(w)
                 elif thr[reply_pos].id != item.id:
                     thr.insert(reply_pos, w)
-                # TODO: what about existing replies that have been updated?
+                else:
+                    thr[reply_pos] = w
 
             # This may have changed the thread date, so we need to recompute its position in the list
             new_pos = bisect.bisect_left(self.threads, thr)
