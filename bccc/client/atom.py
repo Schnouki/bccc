@@ -20,9 +20,10 @@ import dateutil.parser
 log = logging.getLogger(__name__)
 log.addHandler(logging.NullHandler())
 
-ATOM_NS     = "http://www.w3.org/2005/Atom"
-ATOM_THR_NS = "http://purl.org/syndication/thread/1.0"
-AS_NS       = "http://activitystrea.ms/spec/1.0/"
+ATOM_NS      = "http://www.w3.org/2005/Atom"
+ATOM_THR_NS  = "http://purl.org/syndication/thread/1.0"
+AS_NS        = "http://activitystrea.ms/spec/1.0/"
+TOMBSTONE_NS = "http://purl.org/atompub/tombstones/1.0"
 
 
 # {{{ Exceptions
@@ -96,6 +97,11 @@ class Atom:
     def updated(self):
         t = self.get_child("updated").text
         return dateutil.parser.parse(t)
+
+    @property
+    def tombstone(self):
+        ts_tag = "{" + TOMBSTONE_NS + "}deleted-entry"
+        return self.elt.tag == ts_tag
 
     @property
     def verb(self): return self.get_child("verb", AS_NS).text
