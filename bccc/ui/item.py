@@ -98,9 +98,13 @@ class PostWidget(ItemWidget):
     def __init__(self, post, padding=0):
         self._item = post
 
-        author = post.author
+        author = "[deleted]"
+        text = "[deleted]"
         date = post.published.astimezone(dateutil.tz.tzlocal()).strftime("%x - %X")
-        text = post.content
+        if not post.tombstone:
+            author = post.author
+            text = post.content
+
         ItemWidget.__init__(self, post.id, author, date, text, padding)
 
     @property
