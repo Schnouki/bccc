@@ -57,9 +57,10 @@ class ChannelBox(urwid.widget.BoxWidget):
 
         # Channel callbacks
         _callbacks = {
-            "cb_post":   ui.safe_callback(self.pubsub_posts_callback),
-            "cb_status": ui.safe_callback(self.pubsub_status_callback),
-            "cb_config": ui.safe_callback(self.pubsub_config_clalback),
+            "cb_post":    ui.safe_callback(self.pubsub_posts_callback),
+            "cb_retract": ui.safe_callback(self.pubsub_retract_callback),
+            "cb_status":  ui.safe_callback(self.pubsub_status_callback),
+            "cb_config":  ui.safe_callback(self.pubsub_config_clalback),
         }
         channel.set_callbacks(**_callbacks)
 
@@ -100,6 +101,14 @@ class ChannelBox(urwid.widget.BoxWidget):
                 self._invalidate()
 
         self.ui.notify()
+
+    def pubsub_retract_callback(self, item_ids):
+        for id_ in item_ids:
+            self.unread_ids.discard(id_)
+        if self.active:
+            self.ui.threads_list.remove_items(item_ids)
+        self.ui.channels.sort_channels()
+        # Don't notify the user...
 
     def pubsub_status_callback(self, atom):
         self.widget_status.original_widget.set_text(atom.content)
