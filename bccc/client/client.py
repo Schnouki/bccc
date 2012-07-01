@@ -128,13 +128,12 @@ class Client(sleekxmpp.ClientXMPP):
     def handle_pubsub_event(self, msg):
         evt = msg["pubsub_event"]
 
-        EVENT_POST    = 1
-        EVENT_RETRACT = 2
-        EVENT_STATUS  = 3
-        EVENT_CONFIG  = 4
+        # The various events in this PubSub event
+        items_event = {"post": [], "retract": [], "status": []}
+        config_event = []
 
-        # Data about the event
-        evt_type, data, jid = None, None, None
+        # Target channel
+        jid = None
 
         if "items" in evt.keys():
             items = evt["items"]
@@ -145,60 +144,50 @@ class Client(sleekxmpp.ClientXMPP):
             if not node.startswith("/user/"):
                 return
 
-            # Make sure that all items have the same type (not a mix of posts
-            # and retract...)
-            # It's not required by any XEP, but handling different types in the
-            # same event would be much more complicated :/
-            items_types = set(type(it) for it in items)
-            if len(items_types) > 1:
-                log.error("PubSub event with several item types are not supported")
-                log.debug("Unsupported event: %s", str(evt))
-                raise ClientError("Got PubSub event with several item types")
-            items_type = items_types.pop()
-
             jid, chan_type = node[6:].rsplit("/", 1)
 
             if chan_type == "posts":
-                if items_type is xep_0060.stanza.pubsub_event.EventItem:
-                    evt_type = EVENT_POST
-                    data = [item.get_payload() for item in items]
-                elif items_type is xep_0060.stanza.pubsub_event.EventRetract:
-                    evt_type = EVENT_RETRACT
-                    data = [item["id"] for item in items]
-                else:
-                    log.error("Unsupported items type: %s", str(items_type))
-                    raise ClientError("Got PubSub event in posts channel with unknown items type")
+                for item in items:
+                    typ = type(item)
+                    if typ is xep_0060.stanza.pubsub_event.EventItem:
+                        items_event["post"].append(item.get_payload())
+                    elif typ is xep_0060.stanza.pubsub_event.EventRetract:
+                        items_event["retract"].append(item["id"])
+                    else:
+                        log.error("Unsupported items type: %s", str(typ))
+                        raise ClientError("Got PubSub event in posts channel with unknown items type")
+
             elif chan_type == "status":
-                evt_type = EVENT_STATUS
-                data = [item.get_payload() for item in items]
+                items_event["status"] = [item.get_payload() for item in items]
+
             else:
                 log.debug("Unsupported node type for items event: %s", node)
                 return
 
-        elif "configuration" in evt.keys():
-            evt_type = EVENT_CONFIG
+        if "configuration" in evt.keys():
             data = evt["configuration"]
             node = data["node"]
             jid, chan_type = node[6:].rsplit("/", 1)
             if chan_type != "posts":
                 log.debug("Unsupported node type for configuration event: %s", node)
-                return
+            else:
+                config_event.append(data)
 
         # Do we have everything we need?
-        if evt_type is None or data is None or jid is None:
+        if  jid is None:
             return
 
         # Now route event to the right channel
         chan = self.get_channel(jid)
 
-        if evt_type == EVENT_POST:
-            chan.handle_post_event(data)
-        elif evt_type == EVENT_RETRACT:
-            chan.handle_retract_event(data)
-        elif evt_type == EVENT_STATUS:
-            chan.handle_status_event(data)
-        elif evt_type == EVENT_CONFIG:
-            chan.handle_config_event(data)
+        if len(items_event["retract"]) > 0:
+            chan.handle_retract_event(items_event["retract"])
+        if len(items_event["post"]) > 0:
+            chan.handle_post_event(items_event["post"])
+        if len(items_event["status"]) > 0:
+            chan.handle_status_event(items_event["status"])
+        if len(config_event) > 0:
+            chan.handle_config_event(config_event)
     # }}}
 # }}}
 
