@@ -150,14 +150,17 @@ class Client(sleekxmpp.ClientXMPP):
                 for item in items:
                     typ = type(item)
                     if typ is xep_0060.stanza.pubsub_event.EventItem:
+                        log.debug("PubSub event in %s: post item %s", jid, item["id"])
                         items_event["post"].append(item.get_payload())
                     elif typ is xep_0060.stanza.pubsub_event.EventRetract:
+                        log.debug("PubSub event in %s: retract item %s", jid, item["id"])
                         items_event["retract"].append(item["id"])
                     else:
                         log.error("Unsupported items type: %s", str(typ))
                         raise ClientError("Got PubSub event in posts channel with unknown items type")
 
             elif chan_type == "status":
+                log.debug("PubSub event in %s: status update", jid)
                 items_event["status"] = [item.get_payload() for item in items]
 
             else:
@@ -171,6 +174,7 @@ class Client(sleekxmpp.ClientXMPP):
             if chan_type != "posts":
                 log.debug("Unsupported node type for configuration event: %s", node)
             else:
+                log.debug("PubSub event in %s: config update", jid)
                 config_event.append(data)
 
         # Do we have everything we need?
