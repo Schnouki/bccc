@@ -159,9 +159,9 @@ class UpdatableAtomsList:
         if a.object_type not in ("note", "comment"):
             raise AtomError("Unknown item type: {}".format(a.object_type))
 
-        # Make sure this Atom is not already in the list
+        # If Atom already present, remove it so we can update it
         if a in self:
-            return
+            self.remove(a.id)
 
         # Find insertion position, and insert
         pos = bisect.bisect_left(self._list, a)
