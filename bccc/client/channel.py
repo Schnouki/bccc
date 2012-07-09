@@ -131,18 +131,19 @@ class Channel:
             if self.callback_status is not None:
                 self.callback_status(a)
 
-    def handle_config_event(self, conf):
-        # Convert conf to a dict
-        val = conf["form"]["values"]
-        config = {}
-        for (dk, ik) in self.CONFIG_MAP:
-            if ik in val:
-                config[dk] = val[ik].strip()
-        if "creation" in config:
-            config["creation"] = dateutil.parser.parse(config["creation"])
+    def handle_config_event(self, config_events):
+        for conf in config_events:
+            # Convert conf to a dict
+            val = conf["form"]["values"]
+            config = {}
+            for (dk, ik) in self.CONFIG_MAP:
+                if ik in val:
+                    config[dk] = val[ik].strip()
+            if "creation" in config:
+                config["creation"] = dateutil.parser.parse(config["creation"])
 
-        if self.callback_config is not None:
-            self.callback_config(config)
+            if self.callback_config is not None:
+                self.callback_config(config)
     # }}}
     # {{{ PubSub requests
     def pubsub_get_items(self, node, callback, max=None, before=None, after=None):
