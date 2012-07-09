@@ -205,7 +205,7 @@ class Channel:
     def pubsub_get_config(self):
         def _config_cb(iq):
             conf = iq["pubsub_owner"]["configure"]
-            self.handle_config_event(conf)
+            self.handle_config_event([conf])
 
         node = "/user/{}/posts".format(self.jid)
         self.client.ps.get_node_config(self.client.channels_jid, node, callback=_config_cb)
