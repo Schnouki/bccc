@@ -57,6 +57,9 @@ class ItemWidget(urwid.FlowWidget):
     @property
     def text(self): return self._text
 
+    @property
+    def tombstone(self): return False
+
     def keypress(self, size, key):
         return key
 
@@ -109,6 +112,9 @@ class PostWidget(ItemWidget):
 
     @property
     def item(self): return self._item
+
+    @property
+    def tombstone(self): return self._item.tombstone
 
 class ReplyWidget(PostWidget):
     attr_author = ("reply author", "focused reply author")

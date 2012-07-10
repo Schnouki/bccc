@@ -30,6 +30,10 @@ class ThreadList(list):
         return self[-1].item.published
 
     @property
+    def deleted(self):
+        return all(map(lambda p: p.tombstone, self))
+
+    @property
     def id(self):
         return self[0].id
 
@@ -90,6 +94,11 @@ class ThreadsWalker(urwid.ListWalker):
             reply_thr_id = self.extra_widget.thread_id
 
         for thr in self.threads:
+            # Hide threads with only deleted items
+            if thr.deleted:
+                log.debug("Hiding deleted thread %s", thr.id)
+                continue
+
             self.flat_threads.extend(thr)
             if thr.id == reply_thr_id:
                 self.flat_threads.append(self.extra_widget)
