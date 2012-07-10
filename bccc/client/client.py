@@ -44,8 +44,8 @@ class Client(sleekxmpp.ClientXMPP):
         log.info("Initializing SleekXMPP client")
         sleekxmpp.ClientXMPP.__init__(self, jid, password)
 
-        self.channels_cond = threading.Condition()
-        self.channels_jid = None
+        self.inbox_cond = threading.Condition()
+        self.inbox_jid = None
         self.channels = {}
 
         self.register_plugin("xep_0004") # Data forms
@@ -71,7 +71,7 @@ class Client(sleekxmpp.ClientXMPP):
         return "<bccc.client.Client {}>".format(self.boundjid.bare)
 
     def start(self, event):
-        # Try to find channels service
+        # Try to find inbox service
         log.info("Starting service discovery")
         items = self.disco.get_items(jid=self.boundjid.host, block=True)
 
@@ -83,9 +83,8 @@ class Client(sleekxmpp.ClientXMPP):
             for id_ in info["disco_info"]["identities"]:
                 if id_[0] == "pubsub" and id_[1] == "channels":
                     log.info("Channels service found at %s", jid)
-                    with self.channels_cond:
-                        self.channels_jid = jid
-                        self.channels_cond.notify()
+                elif id_[0] == "pubsub" and id_[1] == "inbox":
+                    log.info("Inbox service found ad %s", jid)
 
                     # First send a presence
                     self.send_presence(pto=jid, pfrom=self.boundjid.full,
@@ -97,18 +96,21 @@ class Client(sleekxmpp.ClientXMPP):
                     iq = self.make_iq(ito=jid, itype="set", iquery="jabber:iq:register")
                     res = iq.send(block=True)
                     if "error" in res:
-                        raise ClientError("Could not register with channels service: {}".format(res["errors"]))
+                        raise ClientError("Could not register with inbox: {}".format(res["errors"]))
 
-                    break
+                    # Then notify waiters
+                    with self.inbox_cond:
+                        self.inbox_jid = jid
+                        self.inbox_cond.notify()
 
-        if self.channels_jid is None:
-            raise ClientError("No channels service found.")
+        if self.inbox_jid is None:
+            raise ClientError("No inbox found.")
 
     def ready(self):
-        # Wait until the client is ready and the channels JID is available
-        with self.channels_cond:
-            while self.channels_jid is None:
-                self.channels_cond.wait()
+        # Wait until the client is ready and the inbox JID is available
+        with self.inbox_cond:
+            while self.inbox_jid is None:
+                self.inbox_cond.wait()
     # }}}
     # {{{ Channels management
     def get_channel(self, jid=None, force_new=False):

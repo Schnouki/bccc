@@ -90,7 +90,7 @@ class Channel:
     def get_subscriptions(self):
         channels = []
         subnode = "/user/" + self.jid + "/subscriptions"
-        items = self.client.ps.get_items(self.client.channels_jid, subnode, block=True)
+        items = self.client.ps.get_items(self.client.inbox_jid, subnode, block=True)
         for item in items["pubsub"]["items"]:
             try:
                 chan = self.client.get_channel(item["id"])
@@ -154,7 +154,7 @@ class Channel:
         but uses XEP-0059 instead of the "max_items" attribute (cf.
         XEP-0060:6.5.7).
         """
-        iq = self.client.ps.xmpp.Iq(sto=self.client.channels_jid, stype="get")
+        iq = self.client.ps.xmpp.Iq(sto=self.client.inbox_jid, stype="get")
         iq["pubsub"]["items"]["node"] = node
         if max is not None:
             iq["pubsub"]["rsm"]["max"] = str(max)
@@ -174,7 +174,7 @@ class Channel:
                 self.callback_post([a])
 
         node = "/user/{}/posts".format(self.jid)
-        self.client.ps.get_item(self.client.channels_jid, node, item_id, block=False, callback=_add_post)
+        self.client.ps.get_item(self.client.inbox_jid, node, item_id, block=False, callback=_add_post)
 
     def pubsub_get_posts(self, max=None, before=None, after=None):
         def _items_to_atom(items):
@@ -208,7 +208,7 @@ class Channel:
             self.handle_config_event([conf])
 
         node = "/user/{}/posts".format(self.jid)
-        self.client.ps.get_node_config(self.client.channels_jid, node, callback=_config_cb)
+        self.client.ps.get_node_config(self.client.inbox_jid, node, callback=_config_cb)
     # }}}
     # {{{ Thread loading
     def get_partial_thread(self, first_id, last_id, callback):
@@ -270,7 +270,7 @@ class Channel:
         log.debug("Publishing to channel %s...", self.jid)
         entry = self._make_atom(text, author_name=author_name, in_reply_to=in_reply_to)
         node = "/user/{}/posts".format(self.jid)
-        res = self.client.ps.publish(self.client.channels_jid, node, payload=entry)
+        res = self.client.ps.publish(self.client.inbox_jid, node, payload=entry)
         id_ = res["pubsub"]["publish"]["item"]["id"]
         log.info("Published to channel %s with id %s", self.jid, id_)
         return id_
@@ -278,13 +278,13 @@ class Channel:
     def retract(self, id_):
         log.debug("Retracting %s from channel %s", id_, self.jid)
         node = "/user/{}/posts".format(self.jid)
-        self.client.ps.retract(self.client.channels_jid, node, id_, notify=True)
+        self.client.ps.retract(self.client.inbox_jid, node, id_, notify=True)
 
     def set_status(self, text, author_name=None):
         log.debug("Setting status for channel %s...", self.jid)
         entry = self._make_atom(text, author_name=author_name)
         node = "/user/{}/status".format(self.jid)
-        res = self.client.ps.publish(self.client.channels_jid, node, payload=entry)
+        res = self.client.ps.publish(self.client.inbox_jid, node, payload=entry)
         id_ = res["pubsub"]["publish"]["item"]["id"]
         log.info("Status set for channel %s with id %s", self.jid, id_)
         return id_
@@ -299,7 +299,7 @@ class Channel:
 
         log.info("Updating config for channel %s", self.jid)
         node = "/user/{}/posts".format(self.jid)
-        self.client.ps.set_node_config(self.client.channels_jid, node, form)
+        self.client.ps.set_node_config(self.client.inbox_jid, node, form)
     # }}}
 # }}}
 # Local Variables:
