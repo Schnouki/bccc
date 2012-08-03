@@ -119,6 +119,13 @@ class ThreadsWalker(urwid.ListWalker):
                 self.ui.safe_status_set_text("{}: thread {}/{}".format(self.channel.jid, thr_nb, len(self.threads)))
                 break
 
+        # Avoid placeholders
+        w = self.focus_item[0]
+        if isinstance(w, ItemWidget) and not isinstance(w, PostWidget):
+            first_id = w.id
+            last_id = self.flat_threads[position+1].id
+            self.channel.get_partial_thread(first_id, last_id)
+
         self._modified(False)
 
     def get_prev(self, position):
