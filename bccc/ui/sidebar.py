@@ -27,17 +27,13 @@ class ChannelBox(urwid.widget.BoxWidget):
         self.channel = channel
         self.active = False
         self.unread_ids = set()
-        user, domain = channel.jid.split("@", 1)
-
-        # Domain: shorten my.long.domain.name into "mldn"
-        domain = "".join([w[0] for w in domain.split(".")])
 
         # Init sub-widgets
-        w = urwid.Text(user, wrap="clip")
+        w = urwid.Text("", wrap="clip")
         w = urwid.AttrMap(w, "channel user", "focused channel user")
         self.widget_user = w
 
-        w = urwid.Text("@" + domain, wrap="clip")
+        w = urwid.Text("", wrap="clip")
         w = urwid.AttrMap(w, "channel domain", "focused channel domain")
         self.widget_domain = w
 
@@ -48,6 +44,9 @@ class ChannelBox(urwid.widget.BoxWidget):
         w = urwid.Text("")
         w = urwid.AttrMap(w, "channel status", "focused channel status")
         self.widget_status = w
+
+        # Set title to JID until we now more
+        self.set_title(channel.jid)
 
         # Channel configuration
         self.chan_title = ""
@@ -155,9 +154,26 @@ class ChannelBox(urwid.widget.BoxWidget):
         self.widget_status.original_widget.set_text(status)
         self._invalidate()
 
+    def set_title(self, title):
+        self.chan_title = title
+
+        # What should we display in the sidebar?
+        user, domain = title, ""
+        jid = self.channel.jid
+        if len(title) == 0:
+            title = jid
+        if jid.lower() == title.lower():
+            user, domain = title.split("@", 1)
+
+            # Shorten my.long.domain.name into "mldn"
+            domain = "@" + "".join([w[0] for w in domain.split(".")])
+
+        self.widget_user.original_widget.set_text(user)
+        self.widget_domain.original_widget.set_text(domain)
+
     def set_config(self, config):
         if "title" in config:
-            self.chan_title = config["title"].strip()
+            self.set_title(config["title"].strip())
         if "description" in config:
             self.chan_description = config["description"].strip()
         if "creation" in config:
