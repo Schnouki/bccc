@@ -145,6 +145,19 @@ class Channel:
             if self.callback_config is not None:
                 self.callback_config(config)
     # }}}
+    # {{{ Internal elpers
+    def _items_to_atoms(self, items, callback=None):
+        atoms = []
+        with self.atoms_lock:
+            for item in items["pubsub"]["items"]:
+                elt = item.get_payload()
+                a = self.atoms.add(elt)
+                if a is not None:
+                    atoms.append(a)
+        if len(atoms) > 0 and callback is not None:
+            callback(atoms)
+        return atoms
+    # }}}
     # {{{ PubSub requests
     def pubsub_get_items(self, node, callback, max=None, before=None, after=None):
         """
@@ -166,30 +179,14 @@ class Channel:
         iq.send(callback=callback)
 
     def pubsub_get_post(self, item_id):
-        def _add_post(items):
-            elt = items["pubsub"]["items"]["item"].get_payload()
-            with self.atoms_lock:
-                a = self.atoms.add(elt)
-            if a is not None and self.callback_post is not None:
-                self.callback_post([a])
-
         node = "/user/{}/posts".format(self.jid)
-        self.client.ps.get_item(self.client.inbox_jid, node, item_id, block=False, callback=_add_post)
+        cb = lambda items: self._items_to_atoms(items, self.callback_post)
+        self.client.ps.get_item(self.client.inbox_jid, node, item_id, block=False, callback=cb)
 
     def pubsub_get_posts(self, max=None, before=None, after=None):
-        def _items_to_atom(items):
-            atoms = []
-            with self.atoms_lock:
-                for item in items["pubsub"]["items"]:
-                    elt = item.get_payload()
-                    a = self.atoms.add(elt)
-                    if a is not None:
-                        atoms.append(a)
-            if len(atoms) > 0 and self.callback_post is not None:
-                self.callback_post(atoms)
-
         node = "/user/{}/posts".format(self.jid)
-        return self.pubsub_get_items(node, _items_to_atom, max, before, after)
+        cb = lambda items: self._items_to_atoms(items, self.callback_post)
+        return self.pubsub_get_items(node, cb, max, before, after)
 
     def pubsub_get_status(self):
         def _status_cb(items):
