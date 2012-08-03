@@ -208,36 +208,32 @@ class Channel:
         self.client.ps.get_node_config(self.client.inbox_jid, node, callback=_config_cb)
     # }}}
     # {{{ Thread loading
-    def get_partial_thread(self, first_id, last_id, callback):
+    def get_partial_thread(self, first_id, last_id):
         # Hard to read. Sorry.
-        thread_atoms = []
+        node = "/user/{}/posts".format(self.jid)
 
-        def _add_posts(atoms):
-            thread_atoms.extend(atoms)
-            thread_atoms.sort()
+        # Callback for items after first_id. Requests more items until last_id is found.
+        def _other_posts_cb(atoms):
+            if self.callback_post is not None:
+                self.callback_post(atoms)
+            ids = [a.id for a in atoms]
+            if last_id not in ids:
+                # Request next
+                self.pubsub_get_items(node, cb2, max=20, before=ids[0])
 
-            # Did we find the last ID?
-            found = False
-            for a in atoms:
-                if a.id == last_id:
-                    found = True
-                    break
-            if found or len(atoms) == 0:
-                # End here
-                callback(thread_atoms)
-            else:
-                # Last ID not found yet: requests more posts
-                self.pubsub_get_posts(_add_posts, max=20, before=thread_atoms[0].id)
+        # Callback for first item. If found, will request the next ones.
+        def _first_post_cb(atoms):
+            if self.callback_post is not None:
+                self.callback_post(atoms)
+            ids = [a.id for a in atoms]
+            if first_id in ids:
+                self.pubsub_get_items(node, cb2, max=20, before=first_id)
 
-        def _add_post(a):
-            if a is not None:
-                thread_atoms.append(a)
+        cb1 = lambda items: self._items_to_atoms(items, _first_post_cb)
+        cb2 = lambda items: self._items_to_atoms(items, _other_posts_cb)
 
-            # Request next items
-            self.pubsub_get_posts(_add_posts, max=20, before=first_id)
-
-        # Request first ID
-        self.pubsub_get_post(_add_post, first_id, cb_if_empty=True)
+        # Request first item
+        self.client.ps.get_item(self.client.inbox_jid, node, first_id, block=False, callback=cb1)
     # }}}
     # {{{ Items publishing
     def _make_atom(self, text, author_name=None, in_reply_to=None, update_time=None):
