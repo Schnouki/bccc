@@ -53,12 +53,16 @@ class Atom:
             return name.text
         else:
             # This should NOT happen >:-(
-            url = a.find("{{{}}}url".format(ATOM_NS))
-            if url is not None:
+            uri = a.find("{{{}}}uri".format(ATOM_NS))
+            if uri is not None:
                 log.warning("Atom without author name")
-                return url.text
+                if uri.text.startswith("acct:"):
+                    return uri.text[5:]
+                else:
+                    log.warning("Atom author URI without 'acct:' prefix")
+                    return uri.text
             else:
-                log.warning("Atom without author name & URL")
+                log.warning("Atom without author name & URI")
                 # Really ??!?
                 return "[unknown author]"
 
