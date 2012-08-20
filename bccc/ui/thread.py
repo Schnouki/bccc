@@ -144,7 +144,7 @@ class ThreadsWalker(urwid.ListWalker):
             return None, None
     # }}}
     # {{{ Channel management
-    def set_channel(self, channel):
+    def set_channel(self, channel, cache):
         log.info("Loading channel %s", channel.jid)
         del self.threads[:]
         self.extra_widget = None
@@ -153,6 +153,8 @@ class ThreadsWalker(urwid.ListWalker):
 
         self.more_posts_requested = False
         self.oldest_item = None
+        for atom in cache.items:
+            self.add(atom)
         for atom in self.channel:
             self.add(atom)
         if len(self.threads) < 1:
@@ -423,9 +425,9 @@ class ThreadsBox(urwid.ListBox):
         if pos is not None:
             self.set_focus(pos, coming_from="above")
 
-    def set_active_channel(self, channel):
+    def set_active_channel(self, channel, cache):
         self.top_item = None
-        self.content.set_channel(channel)
+        self.content.set_channel(channel, cache)
 
     def update_description(self):
         def _set_desc(text):

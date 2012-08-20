@@ -334,7 +334,7 @@ class ChannelsList(urwid.ListBox):
             self.active_channel.set_active(False)
         self.active_channel = chan
         chan.set_active(True)
-        self.ui.threads_list.set_active_channel(chan.channel)
+        self.ui.threads_list.set_active_channel(chan.channel, chan.cache)
 
     def goto(self, jid=None):
         def _goto_channel(jid):
