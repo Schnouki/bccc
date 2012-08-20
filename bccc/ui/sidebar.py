@@ -11,20 +11,19 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-import datetime
+import operator as op
 
-import dateutil.tz
 import urwid
 
 from bccc.client import ChannelError
+from bccc.ui import Cache
 
 # {{{ Channel box
 class ChannelBox(urwid.widget.BoxWidget):
-    _oldest_date = datetime.datetime.fromtimestamp(0, tz=dateutil.tz.tzlocal())
-
     def __init__(self, ui, channel):
         self.ui = ui
         self.channel = channel
+        self.cache = Cache(ui.loop, channel.jid)
         self.active = False
         self.unread_ids = set()
 
@@ -51,8 +50,15 @@ class ChannelBox(urwid.widget.BoxWidget):
         # Channel configuration
         self.chan_title = ""
         self.chan_description = ""
-        self.chan_creation = ""
+        self.chan_creation = None
         self.chan_type = ""
+
+        # Load data from cache
+        self.set_config(self.cache.config, False)
+        status = self.cache.status
+        if status is not None:
+            self.widget_status.original_widget.set_text(status)
+        self.last_update = self.cache.last_update
 
         # Channel callbacks
         _callbacks = {
@@ -67,20 +73,17 @@ class ChannelBox(urwid.widget.BoxWidget):
         channel.pubsub_get_status()
         channel.pubsub_get_config()
 
-        # Get most recent post/comment so we can sort by date
-        self.most_recent_activity = self._oldest_date
-        channel.pubsub_get_posts(max=1)
+        if self.last_update == Cache.never:
+            channel.pubsub_get_posts(max=20)
 
     # {{{ PubSub Callbacks
     def pubsub_posts_callback(self, atoms):
-        # Find most recent atom
-        recent_changed = False
-        first_post_ever = (self.most_recent_activity == self._oldest_date)
         for atom in atoms:
-            atom_pub = atom.published
-            if atom_pub > self.most_recent_activity:
-                self.most_recent_activity = atom_pub
-                recent_changed = True
+            self.cache.add_item(atom)
+
+        # Find most recent atom
+        recent_changed = self.last_update != self.cache.last_update
+        self.last_update = self.cache.last_update
 
         # Tell the ChannelsList to sort channels again
         if recent_changed:
@@ -90,7 +93,7 @@ class ChannelBox(urwid.widget.BoxWidget):
             # Notify the content pane
             # TODO: more?
             self.ui.threads_list.add_new_items(atoms)
-        elif not first_post_ever:
+        else:
             # Update unread counter
             for a in atoms:
                 self.unread_ids.add(a.id)
@@ -110,7 +113,9 @@ class ChannelBox(urwid.widget.BoxWidget):
         # Don't notify the user...
 
     def pubsub_status_callback(self, atom):
-        self.widget_status.original_widget.set_text(atom.content)
+        txt = atom.content
+        self.widget_status.original_widget.set_text(txt)
+        self.cache.status = txt
         self._invalidate()
         self.ui.notify()
 
@@ -171,15 +176,24 @@ class ChannelBox(urwid.widget.BoxWidget):
         self.widget_user.original_widget.set_text(user)
         self.widget_domain.original_widget.set_text(domain)
 
-    def set_config(self, config):
+    def set_config(self, config, cache=True):
         if "title" in config:
             self.set_title(config["title"].strip())
         if "description" in config:
             self.chan_description = config["description"].strip()
         if "creation" in config:
-            self.chan_creation = config["creation"].strftime("%x - %X")
+            self.chan_creation = config["creation"]
         if "type" in config:
             self.chan_type = config["type"]
+
+        if cache:
+            self.cache.config = {
+                "title": self.chan_title,
+                "description": self.chan_description,
+                "creation": self.chan_creation,
+                "type": self.chan_type,
+            }
+
         self.display_config()
         self._invalidate()
     # }}}
@@ -285,12 +299,15 @@ class ChannelsList(urwid.ListBox):
         # A nice divider :)
         self._channels.insert(1, urwid.Divider("─"))
 
+        # Because of the cache, we already need to sort now.
+        self.sort_channels()
+
         self.ui.refresh()
 
     def sort_channels(self):
         focus_w, _ = self.get_focus()
         sortable_chans = self._channels[2:]
-        sortable_chans.sort(key=lambda cb: cb.most_recent_activity, reverse=True)
+        sortable_chans.sort(key=op.attrgetter("last_update"), reverse=True)
         self._channels[2:] = sortable_chans
         focus_pos = self._channels.index(focus_w)
         self.set_focus(focus_pos)
