@@ -14,8 +14,8 @@
 import functools
 import logging
 import os
+import os.path
 import queue
-import subprocess
 import sys
 import threading
 
@@ -199,12 +199,30 @@ class UI:
     # }}}
     # {{{ Desktop interaction
     def open_urls(self, *urls):
-        def _open_urls():
-            for url in urls:
-                subprocess.call([self.conf.get("url", "opener"), url])
-        thr = threading.Thread(target=_open_urls)
-        thr.daemon = True
-        thr.start()
+        def call(exe, *args):
+            # Double-fork to detach from parent process
+            if os.fork() == 0:
+                # First child: de-couple from environment, re-fork and exit
+                os.chdir("/")
+                os.setsid()
+                os.umask(0)
+
+                if os.fork() != 0:
+                    os._exit(0)
+
+                # Second child: close file descriptors so the child does not
+                # pollute our beloved stdout/stderr, and run the command
+                os.closerange(1, 1024)
+
+                # And now run the command
+                cmd = [os.path.basename(exe)] + list(args)
+                os.execvp(exe, cmd)
+            else:
+                os.wait()
+
+        opener = self.conf.get("url", "opener")
+        for url in urls:
+            call(opener, url)
 
     def notify(self):
         # Console beep -- good terminal emulators map this to the X11 "urgency" hint
