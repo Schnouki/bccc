@@ -11,6 +11,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+from .cache import Cache
 from .item import ItemWidget, PostWidget, ReplyWidget, NewPostWidget, NewReplyWidget
 from .sidebar import ChannelBox, ChannelsList
 from .thread import ThreadsBox
