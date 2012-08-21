@@ -145,7 +145,7 @@ class Channel:
             if self.callback_config is not None:
                 self.callback_config(config)
     # }}}
-    # {{{ Internal elpers
+    # {{{ Internal helpers
     def _items_to_atoms(self, items, callback=None):
         atoms = []
         with self.atoms_lock:

@@ -81,7 +81,7 @@ class Client(sleekxmpp.ClientXMPP):
                 if id_[0] == "pubsub" and id_[1] == "channels":
                     log.info("Channels service found at %s", jid)
                 elif id_[0] == "pubsub" and id_[1] == "inbox":
-                    log.info("Inbox service found ad %s", jid)
+                    log.info("Inbox service found at %s", jid)
 
                     # First send a presence
                     self.send_presence(pto=jid, pfrom=self.boundjid.full,
