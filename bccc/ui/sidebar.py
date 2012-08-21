@@ -11,6 +11,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+import datetime
 import operator as op
 
 import urwid
@@ -70,10 +71,10 @@ class ChannelBox(urwid.widget.BoxWidget):
         channel.set_callbacks(**_callbacks)
 
         # Request missing informations
-        channel.pubsub_get_status()
         channel.pubsub_get_config()
 
         if self.last_update == Cache.never:
+            channel.pubsub_get_status()
             channel.pubsub_get_posts(max=20)
 
     # {{{ PubSub Callbacks
@@ -297,6 +298,14 @@ class ChannelsList(urwid.ListBox):
                 self.make_active(w)
             else:
                 self._channels.append(w)
+
+        # Find the oldest mtime
+        mtime = min(self._channels, key=op.attrgetter("cache.mtime")).cache.mtime
+
+        # ...and MAM a little earlier :)
+        if mtime > Cache.never:
+            mtime -= datetime.timedelta(hours=1)
+            self.ui.client.mam(start=mtime)
 
         # A nice divider :)
         self._channels.insert(1, urwid.Divider("─"))
