@@ -52,6 +52,7 @@ class Client(sleekxmpp.ClientXMPP):
         self.register_plugin("xep_0030") # Service Discovery
         self.register_plugin("xep_0059") # Result Set Management
         self.register_plugin("xep_0060") # PubSub
+        self.register_plugin("xep_0077") # In-Band Registration
         self.register_plugin("xep_0199") # XMPP Ping
 
         # Easier access to server features
@@ -91,9 +92,9 @@ class Client(sleekxmpp.ClientXMPP):
                                        pstatus="buddycloud", pshow="na", ppriority=-1)
 
                     # In-band registration. XEP 0077 says we SHOULD send a "get"
-                    # first, but not having a plugin do it for us is troublesome
-                    # enough :)
-                    iq = self.make_iq(ito=jid, itype="set", iquery="jabber:iq:register")
+                    # first, it's easier this way :)
+                    iq = self.make_iq_set(ito=jid)
+                    iq.enable("register")
                     res = iq.send(block=True)
                     if "error" in res:
                         raise ClientError("Could not register with inbox: {}".format(res["errors"]))
