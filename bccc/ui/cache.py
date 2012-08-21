@@ -46,6 +46,11 @@ class Cache:
         self._lock = threading.RLock()
         self._loop = loop
         self._handle = None
+
+    def __del__(self):
+        with self._lock:
+            if self._db is not None:
+                self.close()
     # }}}
     # {{{ Sync handling
     def delete(self):
@@ -54,10 +59,11 @@ class Cache:
             os.remove(self._fn)
 
     def close(self):
-        if self._handle is not None:
-            self._loop.remove_alarm(self._handle)
-            self._handle = None
         with self._lock:
+            self._update()
+            if self._handle is not None:
+                self._loop.remove_alarm(self._handle)
+                self._handle = None
             self._db.close()
             self._db = None
 
