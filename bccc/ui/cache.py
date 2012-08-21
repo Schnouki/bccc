@@ -48,6 +48,11 @@ class Cache:
         self._handle = None
     # }}}
     # {{{ Sync handling
+    def delete(self):
+        with self._lock:
+            self.close()
+            os.remove(self._fn)
+
     def close(self):
         if self._handle is not None:
             self._loop.remove_alarm(self._handle)
