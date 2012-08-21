@@ -151,6 +151,7 @@ class Cache:
                 return Cache.never
 
     def add_item(self, atom):
+        # Returns True if this atom is new (i.e. wasn't cached).
         with self._lock:
             aid = atom.id
             entry = Cache._atom_to_entry(atom)
@@ -164,13 +165,18 @@ class Cache:
             ids = self._db["items"]
             # Is the item already in cache?
             if aid in ids:
-                return False
+                # Is it really the same item? (Maybe we're replacing a post by a tombstone)
+                cached_entry = self._db["item-"+aid]
+                if cached_entry == entry:
+                    return False
+                else:
+                    ids.remove(aid)
 
             # Is the item too old to be in cache?
             if len(ids) >= Cache.max_items:
                 oldest_entry = self._db["item-"+ids[-1]]
                 if oldest_entry[0] > entry[0]:
-                    return False
+                    return True
 
             # Insert new entry, preserving the order (newest items first)
             lo, hi = 0, len(ids)
@@ -193,7 +199,5 @@ class Cache:
 
                 self._db["items"] = ids
                 self._update()
-                return True
-            else:
-                return False
+            return True
     # }}}

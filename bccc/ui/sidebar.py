@@ -78,8 +78,10 @@ class ChannelBox(urwid.widget.BoxWidget):
 
     # {{{ PubSub Callbacks
     def pubsub_posts_callback(self, atoms):
+        new_atoms = []
         for atom in atoms:
-            self.cache.add_item(atom)
+            if self.cache.add_item(atom):
+                new_atoms.append(atom)
 
         # Find most recent atom
         recent_changed = self.last_update != self.cache.last_update
@@ -92,10 +94,10 @@ class ChannelBox(urwid.widget.BoxWidget):
         if self.active:
             # Notify the content pane
             # TODO: more?
-            self.ui.threads_list.add_new_items(atoms)
+            self.ui.threads_list.add_new_items(new_atoms)
         else:
             # Update unread counter
-            for a in atoms:
+            for a in new_atoms:
                 self.unread_ids.add(a.id)
             nb_unread = len(self.unread_ids)
             if nb_unread > 0:
