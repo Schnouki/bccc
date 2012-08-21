@@ -11,11 +11,14 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+from xml.etree import cElementTree as ET
 import logging
 import threading
 
 import sleekxmpp
 from sleekxmpp.exceptions import IqError
+from sleekxmpp.xmlstream.matcher import MatchXPath
+from sleekxmpp.xmlstream.handler import Callback
 
 from bccc.client.channel import Channel
 
@@ -31,7 +34,11 @@ class ClientError(Exception):
 from sleekxmpp.xmlstream import register_stanza_plugin
 from sleekxmpp.plugins import xep_0059, xep_0060
 
-register_stanza_plugin(xep_0060.stanza.pubsub.Pubsub, xep_0059.stanza.Set)
+register_stanza_plugin(xep_0060.stanza.Pubsub, xep_0059.stanza.Set)
+
+# Make events iterable...
+register_stanza_plugin(xep_0060.stanza.Event, xep_0060.stanza.EventConfiguration, iterable=True)
+register_stanza_plugin(xep_0060.stanza.Event, xep_0060.stanza.EventItems, iterable=True)
 # }}}
 # {{{ Client
 class Client(sleekxmpp.ClientXMPP):
@@ -58,6 +65,14 @@ class Client(sleekxmpp.ClientXMPP):
         self.disco = self["xep_0030"]
         self.ps = self["xep_0060"]
 
+        # MAM handler
+        self.forward_ns = "urn:xmpp:forward:0"
+        self.register_handler(
+            Callback("MAM reply",
+                     MatchXPath("{%s}message/{%s}forwarded" % (self.default_ns, self.forward_ns)),
+                     self.handle_mam_reply))
+
+        # Event handlers
         self.add_event_handler("session_start", self.start)
 
         self.add_event_handler("pubsub_publish", self.handle_pubsub_publish)
@@ -122,6 +137,44 @@ class Client(sleekxmpp.ClientXMPP):
         chan = Channel(self, jid)
         self.channels[jid] = chan
         return chan
+    # }}}
+    # {{{ MAM handling
+    def handle_mam_reply(self, msg):
+        # This is ugly, probably slow and too convoluted, and should be done in
+        # a clean SleekXMPP plugin instead.
+        fwd = msg.find("{%s}forwarded" % self.forward_ns)
+        msg2 = fwd.find("{%s}message" % self.forward_ns)
+        msg2.tag = "{%s}message" % self.default_ns
+        del msg2.attrib["type"]
+        msg3 = self.Message(xml=msg2)
+        evt = msg3["pubsub_event"]
+
+        for evt2 in evt["substanzas"]:
+            # Encapsulate this in a message and inject it in the stream
+            new_msg = self.Message()
+            new_msg["from"] = msg3["from"]
+            new_msg["to"] = msg3["to"]
+            new_msg["pubsub_event"].append(evt2)
+
+            # *WARNING* Ugly and dangerous! This line kills a kitten every time
+            # it is run.
+            self._XMLStream__spawn_event(new_msg.xml)
+
+    def mam(self, start=None, end=None):
+        self.ready()
+
+        mam_iq = self.make_iq_get(ito=self.inbox_jid, queryxmlns="urn:xmpp:mam:tmp")
+        query = mam_iq.xml.find("{urn:xmpp:mam:tmp}query")
+
+        # This should be done using a stanza handler. Oh well.
+        if start is not None:
+            elt = ET.SubElement(query, "start")
+            elt.text = start.isoformat()
+        if end is not None:
+            elt = ET.SubElement(query, "end")
+            elt.text = end.isoformat()
+
+        mam_iq.send(block=False)
     # }}}
     # {{{ PubSub handling
     def handle_pubsub_publish(self, msg):
