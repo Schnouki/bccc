@@ -16,8 +16,6 @@ import threading
 
 import sleekxmpp
 from sleekxmpp.exceptions import IqError
-from sleekxmpp.xmlstream.matcher import StanzaPath
-from sleekxmpp.xmlstream.handler import Callback
 
 from bccc.client.channel import Channel
 
@@ -60,13 +58,11 @@ class Client(sleekxmpp.ClientXMPP):
         self.disco = self["xep_0030"]
         self.ps = self["xep_0060"]
 
-        # PubSub handler
-        self.register_handler(
-            Callback("Pubsub event",
-                     StanzaPath("message/pubsub_event"),
-                     self.handle_pubsub_event))
-
         self.add_event_handler("session_start", self.start)
+
+        self.add_event_handler("pubsub_publish", self.handle_pubsub_publish)
+        self.add_event_handler("pubsub_retract", self.handle_pubsub_retract)
+        self.add_event_handler("pubsub_config", self.handle_pubsub_config)
 
     def __repr__(self):
         return "<bccc.client.Client {}>".format(self.boundjid.bare)
@@ -128,73 +124,62 @@ class Client(sleekxmpp.ClientXMPP):
         return chan
     # }}}
     # {{{ PubSub handling
-    def handle_pubsub_event(self, msg):
+    def handle_pubsub_publish(self, msg):
         evt = msg["pubsub_event"]
+        items = evt["items"]
+        node = items["node"]
+        jid, chan_type = node[6:].rsplit("/", 1)
 
-        # The various events in this PubSub event
-        items_event = {"post": [], "retract": [], "status": []}
-        config_event = []
-
-        # Target channel
-        jid = None
-
-        if "items" in evt.keys():
-            items = evt["items"]
-            if len(items) == 0:
-                return
-
-            node = items["node"]
-            if not node.startswith("/user/"):
-                return
-
-            jid, chan_type = node[6:].rsplit("/", 1)
-
-            if chan_type == "posts":
-                for item in items:
-                    typ = type(item)
-                    if typ is xep_0060.stanza.pubsub_event.EventItem:
-                        log.debug("PubSub event in %s: post item %s", jid, item["id"])
-                        items_event["post"].append(item.get_payload())
-                    elif typ is xep_0060.stanza.pubsub_event.EventRetract:
-                        log.debug("PubSub event in %s: retract item %s", jid, item["id"])
-                        items_event["retract"].append(item["id"])
-                    else:
-                        log.error("Unsupported items type: %s", str(typ))
-                        raise ClientError("Got PubSub event in posts channel with unknown items type")
-
-            elif chan_type == "status":
-                log.debug("PubSub event in %s: status update", jid)
-                items_event["status"] = [item.get_payload() for item in items]
-
-            else:
-                log.debug("Unsupported node type for items event: %s", node)
-                return
-
-        if "configuration" in evt.keys():
-            data = evt["configuration"]
-            node = data["node"]
-            jid, chan_type = node[6:].rsplit("/", 1)
-            if chan_type != "posts":
-                log.debug("Unsupported node type for configuration event: %s", node)
-            else:
-                log.debug("PubSub event in %s: config update", jid)
-                config_event.append(data)
-
-        # Do we have everything we need?
-        if  jid is None:
+        if not node.startswith("/user/") or chan_type not in ("posts", "status"):
+            log.debug("Publish event with unsupported node type: %s", node)
+            return
+        elif jid is None or len(jid) == 0:
+            log.debug("Publish event with empty JID")
             return
 
-        # Now route event to the right channel
+        payload = items["item"]["payload"]
         chan = self.get_channel(jid)
+        if chan_type == "posts":
+            log.debug("Publish post event for %s: %s", jid, str(payload))
+            chan.handle_post_event([payload])
+        else:
+            log.debug("Publish status event for %s: %s", jid, str(payload))
+            chan.handle_status_event([payload])
 
-        if len(items_event["retract"]) > 0:
-            chan.handle_retract_event(items_event["retract"])
-        if len(items_event["post"]) > 0:
-            chan.handle_post_event(items_event["post"])
-        if len(items_event["status"]) > 0:
-            chan.handle_status_event(items_event["status"])
-        if len(config_event) > 0:
-            chan.handle_config_event(config_event)
+    def handle_pubsub_retract(self, msg):
+        evt = msg["pubsub_event"]
+        items = evt["items"]
+        node = items["node"]
+        jid, chan_type = node[6:].rsplit("/", 1)
+
+        if not node.startswith("/user/") or chan_type != "posts":
+            log.debug("Retract event with unsupported node type: %s", node)
+            return
+        elif jid is None or len(jid) == 0:
+            log.debug("Retract event with empty JID")
+            return
+
+        id = items["item"]["id"]
+        chan = self.get_channel(jid)
+        log.debug("Retract event for %s: %s", jid, id)
+        chan.handle_retract_event([id])
+
+    def handle_pubsub_config(self, msg):
+        evt = msg["pubsub_event"]
+        cfg = evt["configuration"]
+        node = cfg["node"]
+        jid, chan_type = node[6:].rsplit("/", 1)
+
+        if not node.startswith("/user/") or chan_type != "posts":
+            log.debug("Configuration event with unsupported node type: %s", node)
+            return
+        elif jid is None or len(jid) == 0:
+            log.debug("Configuration event with empty JID")
+            return
+
+        chan = self.get_channel(jid)
+        log.debug("Configuratio event for %s: %s", jid, cfg)
+        chan.handle_config_event([cfg])
     # }}}
 # }}}
 
