@@ -160,19 +160,21 @@ class Cache:
                 mid_entry = self._db["item-"+ids[mid]]
                 if entry[0] >= mid_entry[0]: hi = mid
                 else: lo = mid+1
-            ids.insert(lo, aid)
 
-            # Don't store too much things
-            new_ids = ids[:Cache.max_items]
-            old_ids = ids[Cache.max_items:]
-
-            self._db["items"] = new_ids
-            if aid in new_ids:
+            # Only insert if recent enough
+            if lo < Cache.max_items:
+                ids.insert(lo, aid)
                 self._db["item-"+aid] = entry
-            for id in old_ids:
-                full_id = "item-"+id
-                if full_id in self._db:
-                    del self._db[full_id]
 
-            self._defer_sync()
+                # Clean oldest items
+                while len(ids) > Cache.max_items:
+                    id = ids.pop()
+                    del self._db["item-"+id]
+                    changed = True
+
+                self._db["items"] = ids
+                self._defer_sync()
+                return True
+            else:
+                return False
     # }}}
