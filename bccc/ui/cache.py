@@ -48,6 +48,14 @@ class Cache:
         self._handle = None
     # }}}
     # {{{ Sync handling
+    def close(self):
+        if self._handle is not None:
+            self._loop.remove_alarm(self._handle)
+            self._handle = None
+        with self._lock:
+            self._db.close()
+            self._db = None
+
     def sync(self, *args):
         with self._lock:
             log.debug("Sync %s", self._jid)

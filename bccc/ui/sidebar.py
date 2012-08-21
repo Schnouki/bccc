@@ -322,6 +322,7 @@ class ChannelsList(urwid.ListBox):
             new_chan = self.ui.client.get_channel(chan_box.channel.jid, force_new=True)
         except ChannelError:
             return # TODO: display warning
+        chan_box.cache.close()
         new_chan_box = ChannelBox(self.ui, new_chan)
         self._channels[idx] = new_chan_box
         self.make_active(new_chan_box)
