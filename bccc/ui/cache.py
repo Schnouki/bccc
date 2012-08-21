@@ -85,6 +85,20 @@ class Cache:
     # }}}
     # {{{ Simple cached properties
     @property
+    def mtime(self):
+        with self._lock:
+            if "mtime" in self._db:
+                return self._db["mtime"]
+            else:
+                return Cache.never
+
+    def _update(self):
+        with self._lock:
+            now = datetime.datetime.now(tz=dateutil.tz.tzlocal())
+            self._db["mtime"] = now
+            self._defer_sync()
+
+    @property
     def config(self):
         with self._lock:
             if "config" in self._db:
@@ -96,7 +110,7 @@ class Cache:
         with self._lock:
             if "config" not in self._db or self._db["config"] != conf:
                 self._db["config"] = conf
-                self._defer_sync()
+                self._update()
 
     @property
     def status(self):
@@ -108,7 +122,7 @@ class Cache:
         with self._lock:
             if "status" not in self._db or self._db["status"] != val:
                 self._db["status"] = val
-                self._defer_sync()
+                self._update()
     # }}}
     # {{{ Items handling
     @property
@@ -139,7 +153,7 @@ class Cache:
             if "items" not in self._db or len(self._db["items"]) == 0:
                 self._db["items"] = [aid]
                 self._db["item-"+aid] = entry
-                self._defer_sync()
+                self._update()
                 return True
 
             ids = self._db["items"]
@@ -173,7 +187,7 @@ class Cache:
                     changed = True
 
                 self._db["items"] = ids
-                self._defer_sync()
+                self._update()
                 return True
             else:
                 return False
