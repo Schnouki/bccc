@@ -175,6 +175,33 @@ class NewReplyWidget(NewPostWidget):
     def validate(self, *args, **kwds):
         return super().validate(*args, in_reply_to=self.thread_id, **kwds)
 # }}}
+# {{{ Edit post/reply widgets
+class EditItemWidget(NewPostWidget):
+    def __init__(self, ui, channel, text, author, id_, thread_id=None):
+        self.orig_text = text
+        self.orig_author = author
+        self.orig_id = id_
+        self.orig_thread_id = thread_id
+        super().__init__(ui, channel)
+
+        self.edit.set_edit_text(self.orig_text)
+
+    def validate(self, *args, **kwds):
+        return super().validate(*args, author_name=self.orig_author, id_=self.orig_id, in_reply_to=self.orig_thread_id, **kwds)
+
+class EditPostWidget(EditItemWidget):
+    attr_edit = ("new post text", "focused new post text")
+    attr_box  = ("new post box",  "focused new post box")
+    box_title = "Edit post"
+    status_base = "Edit post in {}"
+
+class EditReplyWidget(EditItemWidget):
+    attr_edit = ("new reply text", "focused new reply text")
+    attr_box  = ("new reply box",  "focused new reply box")
+    box_title = "Edit reply"
+    status_base = "Edit reply in {}"
+
+# }}}
 # Local Variables:
 # mode: python3
 # End:

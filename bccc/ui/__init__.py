@@ -12,7 +12,7 @@
 # specific language governing permissions and limitations under the License.
 
 from .cache import Cache
-from .item import ItemWidget, PostWidget, ReplyWidget, NewPostWidget, NewReplyWidget
+from .item import ItemWidget, PostWidget, ReplyWidget, NewPostWidget, NewReplyWidget, EditPostWidget, EditReplyWidget
 from .sidebar import ChannelBox, ChannelsList
 from .thread import ThreadsBox
 from .ui import UI

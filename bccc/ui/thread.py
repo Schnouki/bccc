@@ -17,7 +17,8 @@ import logging
 import urwid
 
 from bccc.ui import ItemWidget, PostWidget, ReplyWidget, \
-                    NewPostWidget, NewReplyWidget
+                    NewPostWidget, NewReplyWidget, \
+                    EditPostWidget, EditReplyWidget
 from .util import extract_urls
 
 log = logging.getLogger(__name__)
@@ -93,15 +94,33 @@ class ThreadsWalker(urwid.ListWalker):
         elif type(self.extra_widget) is NewReplyWidget:
             reply_thr_id = self.extra_widget.thread_id
 
+        # Handle edit post/reply widget
+        edit_thr_id = None
+        if type(self.extra_widget) is EditPostWidget:
+            edit_thr_id = self.extra_widget.orig_id
+        elif type(self.extra_widget) is EditReplyWidget:
+            edit_thr_id = self.extra_widget.orig_thread_id
+
         for thr in self.threads:
             # Hide threads with only deleted items
             if thr.deleted:
                 log.debug("Hiding deleted thread %s", thr.id)
                 continue
 
+            beg = len(self.flat_threads)
             self.flat_threads.extend(thr)
             if thr.id == reply_thr_id:
                 self.flat_threads.append(self.extra_widget)
+            elif thr.id == edit_thr_id:
+                # Find item with the same ID as self.extra_widget
+                pos = None
+                for (idx, w) in enumerate(self.flat_threads[beg:]):
+                    if w.id == self.extra_widget.orig_id:
+                        pos = beg + idx + 1
+                        break
+                if pos is not None:
+                    self.flat_threads.insert(pos, self.extra_widget)
+                # TODO: handle pos == None
             self.flat_threads.append(urwid.Divider(" "))
     # }}}
     # {{{ ListWalker interface
@@ -295,6 +314,27 @@ class ThreadsWalker(urwid.ListWalker):
         self._modified()
         return self.flat_threads.index(self.extra_widget)
 
+    def edit_post_or_reply(self):
+        """Create a NewPostWidget or NewReplyWidget after the focused item so the user can edit it. Return its position."""
+        focus_w = self.focus_item[0]
+
+        if not hasattr(focus_w, "id"):
+            # The focused item is probably not a post or a reply. Maybe a
+            # divider, maybe something else?...
+            return
+
+        item_id = focus_w.id
+        item_author = focus_w.author
+        item_text = focus_w.text
+
+        self.focus_before_extra_widget = self.focus_item
+        if hasattr(focus_w, "in_reply_to"):
+            self.extra_widget = EditReplyWidget(self.ui, self.channel, item_text, item_author, item_id, focus_w.in_reply_to)
+        else:
+            self.extra_widget = EditPostWidget(self.ui, self.channel, item_text, item_author, item_id)
+        self._modified()
+        return self.flat_threads.index(self.extra_widget)
+
     def remove_extra_widget(self):
         if self.extra_widget is not None:
             self.extra_widget = None
@@ -385,6 +425,8 @@ class ThreadsBox(urwid.ListBox):
             self.update_description()
         elif key == "delete":
             self.content.delete_item()
+        elif key == "e":
+            self.edit_post_or_reply(size)
         elif key == "G":
             self.content.goto_focused_post_channel()
         elif key == "n":
@@ -422,6 +464,12 @@ class ThreadsBox(urwid.ListBox):
     def new_reply(self, size):
         # Create a new reply, trying not to move the rest of the screen.
         pos = self.content.new_reply()
+        if pos is not None:
+            self.set_focus(pos, coming_from="above")
+
+    def edit_post_or_reply(self, size):
+        # Edit current post or reply, trying not to move the rest of the screen.
+        pos = self.content.edit_post_or_reply()
         if pos is not None:
             self.set_focus(pos, coming_from="above")
 
