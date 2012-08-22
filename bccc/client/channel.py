@@ -236,7 +236,7 @@ class Channel:
         self.client.ps.get_item(self.client.inbox_jid, node, first_id, block=False, callback=cb1)
     # }}}
     # {{{ Items publishing
-    def _make_atom(self, text, author_name=None, in_reply_to=None, update_time=None):
+    def _make_atom(self, text, author_name=None, id_=None, in_reply_to=None, update_time=None):
         # Build something that looks like an Atom and return it
         entry = ET.Element("entry", xmlns=ATOM_NS)
 
@@ -254,19 +254,23 @@ class Channel:
         name.text = author_name
         updated.text = update_time
 
+        if id_ is not None:
+            # Probably not necessary: added by the server.
+            id_el = ET.SubElement(entry, "id")
+            id_el.text = id_
         if in_reply_to is not None:
             irt = ET.SubElement(entry, "{{{}}}in-reply-to".format(ATOM_THR_NS), ref=in_reply_to)
 
         return entry
 
-    def publish(self, text, author_name=None, in_reply_to=None):
+    def publish(self, text, author_name=None, id_=None, in_reply_to=None):
         log.debug("Publishing to channel %s...", self.jid)
-        entry = self._make_atom(text, author_name=author_name, in_reply_to=in_reply_to)
+        entry = self._make_atom(text, author_name=author_name, id_=id_, in_reply_to=in_reply_to)
         node = "/user/{}/posts".format(self.jid)
-        res = self.client.ps.publish(self.client.inbox_jid, node, payload=entry)
-        id_ = res["pubsub"]["publish"]["item"]["id"]
-        log.info("Published to channel %s with id %s", self.jid, id_)
-        return id_
+        res = self.client.ps.publish(self.client.inbox_jid, node, payload=entry, id=id_)
+        new_id = res["pubsub"]["publish"]["item"]["id"]
+        log.info("Published to channel %s with id %s", self.jid, new_id)
+        return new_id
 
     def retract(self, id_):
         log.debug("Retracting %s from channel %s", id_, self.jid)
