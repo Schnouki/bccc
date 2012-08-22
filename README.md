@@ -174,6 +174,7 @@ Basic usage
 - In the main panel, you can start writing a new post by pressing `n`, or you
   can start replying to the focused post/reply by pressing `r`. After you have
   typed your message, press `Alt+Enter` to send it or `Escape` to cancel.
+- You can also edit an existing post/reply by pressing `e`.
 - In the main panel, you can press `=` to force reloading the channel. This is
   mostly useful when debugging, not for general usage `:)`
 - In the main panel, you can update the active channel title, status message and
