@@ -207,8 +207,6 @@ TODO
   new stanza types
 - handle errors: private channels, posting forbidden, etc.
 - handle subscriptions, affiliations, moderators, etc.
-- persistence: save last known item ID for each channel in a database and tell
-  how many new items there are after a relaunch
 
 *Patches welcome!* `:)`
 
