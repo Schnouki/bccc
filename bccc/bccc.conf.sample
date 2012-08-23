@@ -3,6 +3,12 @@
 jid = test@example.com
 password = super_secret_passw0rd
 
+# Connection tweaks
+#host = example.com
+#port = 5222
+#use_ipv6 = True
+#use_tls = True
+
 [log]
 # Destination. Leave empty to disable logging.
 filename = ~/.bccc.log

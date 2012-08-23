@@ -58,8 +58,26 @@ class UI:
 
         jid, password = conf.get("buddycloud", "jid"), conf.get("buddycloud", "password")
         self.client = bccc.client.Client(jid, password)
+
+        address = ()
+        if conf.has_option("buddycloud", "host"):
+            host = conf.get("buddycloud", "host")
+            port = 5222
+            if conf.has_option("buddycloud", "port"):
+                port = conf.getint("buddycloud", "port")
+            address = (host, port)
+        elif conf.has_option("buddycloud", "port"):
+            print("Please specify a hostname if you want to use a custom XMPP client port.", file=sys.stderr)
+
+        if conf.has_option("buddycloud", "use_ipv6"):
+            self.client.use_ipv6 = conf.get("buddycloud", "use_ipv6")
+
+        use_tls = True
+        if conf.has_option("buddycloud", "use_tls"):
+            use_tls = conf.getboolean("buddycloud", "use_tls")
+
         print("Logging in as {jid}...".format(jid=jid), file=sys.stderr)
-        if not self.client.connect():
+        if not self.client.connect(address=address, use_tls=use_tls):
             print("Unable to connect to server!", file=sys.stderr)
             sys.exit(1)
 
