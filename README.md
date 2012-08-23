@@ -25,7 +25,7 @@ bccc uses the following libraries:
 - [Urwid](http://pypi.python.org/pypi/urwid), a console user interface library
   (tested with v1.0.1)
 - [SleekXMPP](http://pypi.python.org/pypi/sleekxmpp), a library for XMPP (tested
-  with v1.0)
+  with v1.1.0)
 - [dateutil](http://pypi.python.org/pypi/python-dateutil), everything you need
   for manipulating dates and times in Python (tested with v2.0)
 - [dnspython3](http://pypi.python.org/pypi/dnspython3/), a DNS toolkit (optional)

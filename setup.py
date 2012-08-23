@@ -31,7 +31,7 @@ setup(name="bccc",
       install_requires=[
           "distribute",
           "python-dateutil",
-          "sleekxmpp >= 1.0",
+          "sleekxmpp >= 1.1.10",
           "urwid >= 1.0.1",
       ],
       extras_require={
