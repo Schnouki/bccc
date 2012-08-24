@@ -27,9 +27,3 @@ theme = dark
 # configuration, this may produce a sound and/or make your terminal emulator set
 # the X11 "urgency" hint on its window.
 console_beep = on
-
-[url]
-# Program used to open URLs. On Linux (and other FreeDesktop-compliant systems),
-# "xdg-open" is usually a good choice. You can also set this to your web browser
-# (firefox, chromium, uzbl, etc.) if you want to.
-opener = xdg-open
