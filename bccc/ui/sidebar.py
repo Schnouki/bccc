@@ -113,18 +113,15 @@ class ChannelBox(urwid.widget.BoxWidget):
         if self.active:
             self.ui.threads_list.remove_items(item_ids)
         self.ui.channels.sort_channels()
-        # Don't notify the user...
 
     def pubsub_status_callback(self, atom):
         txt = atom.content
         self.widget_status.original_widget.set_text(txt)
         self.cache.status = txt
         self._invalidate()
-        self.ui.notify()
 
     def pubsub_config_clalback(self, conf):
         self.set_config(conf)
-        self.ui.notify()
     # }}}
     # {{{ Channel management
     def set_active(self, active):
