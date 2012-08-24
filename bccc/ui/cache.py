@@ -213,7 +213,9 @@ class Cache:
             full_id = "item-"+id
 
             if "items" in self._db and id in self._db["items"]:
-                self._db["items"].remove(id)
+                items = self._db["items"]
+                items.remove(id)
+                self._db["items"] = items
                 changed = True
             if full_id in self._db:
                 del self._db[full_id]
