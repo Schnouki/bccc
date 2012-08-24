@@ -35,12 +35,13 @@ class Cache:
     defer_sec = 5
     never = datetime.datetime.fromtimestamp(0, tz=dateutil.tz.tzlocal())
 
-    def __init__(self, loop, jid):
-        self._jid = jid
+    def __init__(self, loop, account_jid, channel_jid):
+        self._jid = channel_jid
 
-        if not os.path.isdir(Cache.cache_dir):
-            os.makedirs(Cache.cache_dir)
-        self._fn = os.path.join(Cache.cache_dir, self._jid)
+        account_cache_dir = os.path.join(Cache.cache_dir, account_jid)
+        if not os.path.isdir(account_cache_dir):
+            os.makedirs(account_cache_dir)
+        self._fn = os.path.join(account_cache_dir, self._jid)
         self._db = shelve.open(self._fn)
 
         self._lock = threading.RLock()
