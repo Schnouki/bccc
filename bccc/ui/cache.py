@@ -71,11 +71,16 @@ class Cache:
         with self._lock:
             log.debug("Sync %s", self._jid)
             self._db.sync()
+            self._handle = None
 
-    def _defer_sync(self):
-        if self._handle is not None:
-            self._loop.remove_alarm(self._handle)
-        self._handle = self._loop.set_alarm_in(Cache.defer_sec, self.sync)
+    def _update(self):
+        with self._lock:
+            now = datetime.datetime.now(tz=dateutil.tz.tzlocal())
+            self._db["mtime"] = now
+
+            if self._handle is not None:
+                self._loop.remove_alarm(self._handle)
+            self._handle = self._loop.set_alarm_in(Cache.defer_sec, self.sync)
     # }}}
     # {{{ Data conversion
     @staticmethod
@@ -102,12 +107,6 @@ class Cache:
                 return self._db["mtime"]
             else:
                 return Cache.never
-
-    def _update(self):
-        with self._lock:
-            now = datetime.datetime.now(tz=dateutil.tz.tzlocal())
-            self._db["mtime"] = now
-            self._defer_sync()
 
     @property
     def config(self):
