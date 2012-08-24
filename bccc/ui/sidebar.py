@@ -110,6 +110,7 @@ class ChannelBox(urwid.widget.BoxWidget):
     def pubsub_retract_callback(self, item_ids):
         for id_ in item_ids:
             self.unread_ids.discard(id_)
+            self.cache.del_item(id_)
         if self.active:
             self.ui.threads_list.remove_items(item_ids)
         self.ui.channels.sort_channels()

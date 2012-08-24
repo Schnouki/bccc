@@ -205,4 +205,18 @@ class Cache:
                 self._db["items"] = ids
                 self._update()
             return True
+
+    def del_item(self, id):
+        with self._lock:
+            changed = False
+            full_id = "item-"+id
+
+            if "items" in self._db and id in self._db["items"]:
+                self._db["items"].remove(id)
+                changed = True
+            if full_id in self._db:
+                del self._db[full_id]
+                changed = True
+            if changed:
+                self._update()
     # }}}
