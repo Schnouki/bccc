@@ -24,7 +24,7 @@ class ChannelBox(urwid.widget.BoxWidget):
     def __init__(self, ui, channel):
         self.ui = ui
         self.channel = channel
-        self.cache = Cache(ui.loop, ui.client.boundjid.bare, channel.jid)
+        self.cache = Cache(ui.client.boundjid.bare, channel.jid)
         self.active = False
         self.unread_ids = set()
 

@@ -35,7 +35,7 @@ class Cache:
     defer_sec = 5
     never = datetime.datetime.fromtimestamp(0, tz=dateutil.tz.tzlocal())
 
-    def __init__(self, loop, account_jid, channel_jid):
+    def __init__(self, account_jid, channel_jid):
         self._jid = channel_jid
 
         account_cache_dir = os.path.join(Cache.cache_dir, account_jid)
@@ -45,8 +45,7 @@ class Cache:
         self._db = shelve.open(self._fn)
 
         self._lock = threading.RLock()
-        self._loop = loop
-        self._handle = None
+        self._timer = None
 
     def __del__(self):
         with self._lock:
@@ -62,9 +61,9 @@ class Cache:
     def close(self):
         with self._lock:
             self._update()
-            if self._handle is not None:
-                self._loop.remove_alarm(self._handle)
-                self._handle = None
+            if self._timer is not None:
+                self._timer.cancel()
+                self._timer = None
             self._db.close()
             self._db = None
 
@@ -72,16 +71,17 @@ class Cache:
         with self._lock:
             log.debug("Sync %s", self._jid)
             self._db.sync()
-            self._handle = None
+            self._timer = None
 
     def _update(self):
         with self._lock:
             now = datetime.datetime.now(tz=dateutil.tz.tzlocal())
             self._db["mtime"] = now
 
-            if self._handle is not None:
-                self._loop.remove_alarm(self._handle)
-            self._handle = self._loop.set_alarm_in(Cache.defer_sec, self.sync)
+            if self._timer is not None:
+                self._timer.cancel()
+            self._timer = threading.Timer(Cache.defer_sec, self.sync)
+            self._timer.start()
     # }}}
     # {{{ Data conversion
     @staticmethod
