@@ -13,6 +13,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+import argparse
 import configparser
 import getpass
 import logging
@@ -23,10 +24,17 @@ import sys
 
 import bccc.ui
 
-config_dir = os.getenv("XDG_CONFIG_HOME", "~/.config")
-config_dir = os.path.expanduser(os.path.join(config_dir, "bccc"))
-config_file = os.path.join(config_dir, "bccc.conf")
+config_file = os.path.join(os.getenv("XDG_CONFIG_HOME", "~/.config"),
+                           "bccc","bccc.conf")
 sample_config_file = resource_filename("bccc", "bccc.conf.sample")
+
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="buddycloud console client")
+parser.add_argument("-c", "--config", metavar="CFG", default=config_file,
+                    help="path to configuration file")
+args = parser.parse_args()
+config_file = os.path.expanduser(args.config)
+config_dir = os.path.dirname(config_file)
 
 # Create a default config file if none exists
 if not os.path.isfile(config_file):
