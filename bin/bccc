@@ -33,7 +33,7 @@ parser = argparse.ArgumentParser(description="buddycloud console client")
 parser.add_argument("-c", "--config", metavar="CFG", default=config_file,
                     help="path to configuration file")
 args = parser.parse_args()
-config_file = os.path.expanduser(args.config)
+config_file = os.path.abspath(os.path.expanduser(args.config))
 config_dir = os.path.dirname(config_file)
 
 # Create a default config file if none exists
