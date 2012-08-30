@@ -11,6 +11,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
+import datetime
 from xml.etree import cElementTree as ET
 import logging
 import threading
@@ -169,10 +170,10 @@ class Client(sleekxmpp.ClientXMPP):
         # This should be done using a stanza handler. Oh well.
         if start is not None:
             elt = ET.SubElement(query, "start")
-            elt.text = start.isoformat()
+            elt.text = start.astimezone(datetime.timezone.utc).isoformat()
         if end is not None:
             elt = ET.SubElement(query, "end")
-            elt.text = end.isoformat()
+            elt.text = end.astimezone(datetime.timezone.utc).isoformat()
 
         mam_iq.send(block=False)
     # }}}
