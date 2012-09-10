@@ -297,12 +297,10 @@ class ChannelsList(urwid.ListBox):
             else:
                 self._channels.append(w)
 
-        # Find the oldest mtime
-        mtime = min(self._channels, key=op.attrgetter("cache.mtime")).cache.mtime
-
-        # ...and MAM a little earlier :)
-        if mtime > Cache.never:
-            mtime -= datetime.timedelta(hours=1)
+        # Find the oldest mtime and MAM a little earlier
+        mtimes = [chan.cache.last_update for chan in self._channels if chan.cache.last_update > Cache.never]
+        if len(mtimes) > 0:
+            mtime = min(mtimes) - datetime.timedelta(days=1)
             self.ui.client.mam(start=mtime)
 
         # A nice divider :)

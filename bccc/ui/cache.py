@@ -75,9 +75,6 @@ class Cache:
 
     def _update(self):
         with self._lock:
-            now = datetime.datetime.now(tz=dateutil.tz.tzlocal())
-            self._db["mtime"] = now
-
             if self._timer is not None:
                 self._timer.cancel()
             self._timer = threading.Timer(random.uniform(3, 8), self.sync)
@@ -101,14 +98,6 @@ class Cache:
         return Atom(elt)
     # }}}
     # {{{ Simple cached properties
-    @property
-    def mtime(self):
-        with self._lock:
-            if "mtime" in self._db:
-                return self._db["mtime"]
-            else:
-                return Cache.never
-
     @property
     def config(self):
         with self._lock:
