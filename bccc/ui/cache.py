@@ -15,6 +15,7 @@ import datetime
 import logging
 import os
 import os.path
+import random
 import shelve
 import threading
 import xml.etree.ElementTree as ET
@@ -32,7 +33,6 @@ class Cache:
     # {{{ Constructor and parameters
     cache_dir = os.path.join(os.getenv("XDG_CACHE_HOME", os.path.expanduser("~")), "bccc")
     max_items = 200
-    defer_sec = 5
     never = datetime.datetime.fromtimestamp(0, tz=dateutil.tz.tzlocal())
 
     def __init__(self, account_jid, channel_jid):
@@ -80,7 +80,7 @@ class Cache:
 
             if self._timer is not None:
                 self._timer.cancel()
-            self._timer = threading.Timer(Cache.defer_sec, self.sync)
+            self._timer = threading.Timer(random.uniform(3, 8), self.sync)
             self._timer.start()
     # }}}
     # {{{ Data conversion
