@@ -210,7 +210,7 @@ class ThreadsWalker(urwid.ListWalker):
         # Find thread ID
         thr_id = item.id
         item_is_post = True
-        if item.object_type == "comment":
+        if item.object_type == "comment" and item.in_reply_to is not None:
             item_is_post = False
             thr_id = item.in_reply_to
         pos_thr = self.find_thread_by_id(thr_id)

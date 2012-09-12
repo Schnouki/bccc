@@ -82,7 +82,13 @@ class Atom:
     def id(self): return self.get_child("id").text
 
     @property
-    def in_reply_to(self): return self.get_child("in-reply-to", ATOM_THR_NS).attrib["ref"]
+    def in_reply_to(self):
+        irt = self.get_child("in-reply-to", ATOM_THR_NS)
+        if irt is not None:
+            if "ref" in irt.attrib:
+                return irt.attrib["ref"]
+            else:
+                log.warning("Atom with in-reply-to element without ref attribute")
 
     @property
     def link(self): return self.get_child("link").attrib
