@@ -343,6 +343,7 @@ class ChannelsList(urwid.ListBox):
         self.active_channel = chan
         chan.set_active(True)
         self.ui.threads_list.set_active_channel(chan.channel, chan.cache)
+        self.ui.set_title(chan.channel.jid)
 
     def goto(self, jid=None):
         def _goto_channel(jid):

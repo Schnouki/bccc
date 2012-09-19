@@ -27,3 +27,7 @@ theme = dark
 # configuration, this may produce a sound and/or make your terminal emulator set
 # the X11 "urgency" hint on its window.
 console_beep = on
+
+# Set XTerm title to the active channel JID. This should be safe when using any
+# modern terminal.
+xterm_title = on

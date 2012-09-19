@@ -224,6 +224,12 @@ class UI:
         # Console beep -- good terminal emulators map this to the X11 "urgency" hint
         if (not self.conf.has_option("ui", "console_beep")) or self.conf.getboolean("ui", "console_beep"):
             print("\a", end="")
+
+    def set_title(self, jid):
+        # Set XTerm title
+        if (not self.conf.has_option("ui", "xterm_title")) or self.conf.getboolean("ui", "xterm_title"):
+            title = "{jid} - bccc".format(jid=jid)
+            print("\033]0;{title}\007".format(title=title), end="")
     # }}}
 # }}}
 # Local Variables:
