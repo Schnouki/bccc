@@ -61,7 +61,7 @@ class ThreadsWalker(urwid.ListWalker):
 
         # A list of ThreadList, newest thread first
         self.threads = []
-        self.flat_threads = None
+        self.flat_threads = []
 
     # {{{ Internal helpers
     def _modified(self, flatten=True):
